@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/app/lib/supabaseClient';
-import useUserSession from '../lib/useUserSession';
-
+import React, { useEffect, useState, useCallback } from "react";
+import { supabase } from "@/app/lib/supabaseClient";
+import useUserSession from "../lib/useUserSession";
+import LoadingSpinner from "./LoadingSpinner";
 const Messages = ({ id }) => {
   const { user } = useUserSession({ redirectIfNoSession: true });
   const [messages, setMessages] = useState([]);
@@ -10,9 +10,11 @@ const Messages = ({ id }) => {
   const [isLoading, setIsLoading] = useState(true); // For loading state
   const [error, setError] = useState(null); // For error state
   const [sender_Id, setSenderId] = useState(null); // For sender ID
+  const [role, setRole] = useState(null);
   // Fetch messages and sender names using useCallback for optimization
   useEffect(() => {
     if (user) {
+      setRole(user.user_metadata.role);
       setSenderId(user.id);
     }
   }, [user]);
@@ -32,7 +34,7 @@ const Messages = ({ id }) => {
       if (messagesError) {
         throw new Error(messagesError.message);
       }
-      
+
       // Fetch sender names in parallel using Promise.all
       const messagesWithSenderNames = await Promise.all(
         messagesData.map(async (message) => {
@@ -69,7 +71,7 @@ const Messages = ({ id }) => {
   }, [id, fetchMessages]);
 
   if (isLoading) {
-    return <p className='text-[#4F46E5]'>Loading messages...</p>;
+    return <LoadingSpinner />;
   }
 
   // Update message
@@ -110,7 +112,9 @@ const Messages = ({ id }) => {
       alert("Error deleting message.");
     } else {
       // Remove the deleted message from state
-      const updatedMessages = messages.filter((message) => message.id !== messageId);
+      const updatedMessages = messages.filter(
+        (message) => message.id !== messageId
+      );
       setMessages(updatedMessages);
     }
   };
@@ -120,16 +124,16 @@ const Messages = ({ id }) => {
       alert("Message content cannot be empty");
       return;
     }
-  console.log("Sender ID:", sender_Id); // Check sender ID
+    console.log("Sender ID:", sender_Id); // Check sender ID
     const { data, error } = await supabase.from("messages").insert([
       {
         course_id: id,
         sender_id: sender_Id,
         content: newContent,
-        message_type: "text"
+        message_type: "text",
       },
     ]);
-// console.log("Sending message:", sender_Id);  
+    // console.log("Sending message:", sender_Id);
     if (error) {
       console.error("Failed to send message:", error.message);
       alert("Failed to send message.");
@@ -137,7 +141,6 @@ const Messages = ({ id }) => {
       console.log("Message sent:", data);
       setNewContent(""); // Clear textarea
       fetchMessages();
-
     }
   };
   return (
@@ -154,7 +157,12 @@ const Messages = ({ id }) => {
               className="p-4 border border-gray-200 rounded-xl bg-[#F9FAFB] shadow-sm"
             >
               <div className="flex justify-between items-center text-sm text-[#1F2937]">
-                <span className="font-semibold"> {sender_Id === message.sender_id ? "You" : message.sender_name}</span>
+                <span className="font-semibold">
+                  {" "}
+                  {sender_Id === message.sender_id
+                    ? "You"
+                    : message.sender_name}
+                </span>
                 <span className="text-gray-500">{message.sent_at}</span>
               </div>
 
@@ -186,23 +194,25 @@ const Messages = ({ id }) => {
                 )}
               </div>
 
-              <div className="mt-4 flex gap-2 text-sm">
-                <button
-                  onClick={() => {
-                    setEditingMessage(message.id);
-                    setNewContent(message.content);
-                  }}
-                  className="bg-[#4F46E5] py-2 px-3 rounded-lg cursor-pointer hover:bg-[#4338ca] transition duration-300"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => deleteMessage(message.id)}
-                  className="text-white hover:bg-red-600 transition duration-300 py-2 px-2 rounded-lg bg-red-500 cursor-pointer"
-                >
-                  Delete
-                </button>
-              </div>
+              {(role === "teacher" || sender_Id === message.sender_id) && (
+                <div className="mt-4 flex gap-2 text-sm">
+                  <button
+                    onClick={() => {
+                      setEditingMessage(message.id);
+                      setNewContent(message.content);
+                    }}
+                    className="bg-[#4F46E5] py-2 px-3 rounded-lg cursor-pointer hover:bg-[#4338ca] transition duration-300"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deleteMessage(message.id)}
+                    className="text-white hover:bg-red-600 transition duration-300 py-2 px-2 rounded-lg bg-red-500 cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           ))
         )}
@@ -215,7 +225,7 @@ const Messages = ({ id }) => {
           className="w-full text-black p-3 border border-gray-300 rounded-lg focus:outline-none  mt-4"
         />
         <button
-          onClick= {handleSendMessage}
+          onClick={handleSendMessage}
           className="bg-[#4F46E5] text-white px-4 py-2 rounded-lg hover:bg-[#4338ca] transition duration-300 cursor-pointer mt-2"
         >
           Send Message

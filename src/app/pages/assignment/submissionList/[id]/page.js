@@ -149,7 +149,7 @@ export default function SubmissionsListPage() {
                   <td className="p-4 border-b">
                     {sub.feedback === ""
                       ? "—"
-                      : sub.feedback.length > 50
+                      : sub.feedback?.length > 50
                       ? sub.feedback.slice(0, 50) + "..."
                       : sub.feedback}
                   </td>
