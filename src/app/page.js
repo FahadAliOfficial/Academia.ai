@@ -1,103 +1,100 @@
-import Image from "next/image";
+'use client'
+
+import { useState } from 'react';
 
 export default function Home() {
+  <time datetime="2016-10-25" suppressHydrationWarning />
+  
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="font-sans bg-[#F9FAFB] text-[#1F2937]">
+      {/* ✅ Navbar */}
+      <header className="fixed top-0 left-0 w-full bg-[#4F46E5] text-white shadow-md z-50">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+          <h1 className="text-2xl font-bold">EduSphere</h1>
+          <nav className="hidden md:flex space-x-6 font-medium">
+            <a href="#home" className="hover:underline">Home</a>
+            <a href="#features" className="hover:underline">Features</a>
+            <a href="#testimonials" className="hover:underline">Testimonials</a>
+            <a href="#contact" className="hover:underline">Contact</a>
+          </nav>
+        </div>
+      </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
+      {/* ✅ Hero Section */}
+      <section id="home" className="pt-28 min-h-screen flex flex-col items-center justify-center text-center px-4">
+        <h2 className="text-5xl font-bold mb-4">Welcome to EduSphere</h2>
+        <p className="text-lg text-[#6B7280] max-w-xl mx-auto">
+          A complete e-learning platform empowering students and teachers to connect, learn, and grow.
+        </p>
+        <div className="mt-6">
           <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/login"
+            className="bg-[#4F46E5] hover:bg-[#0EA5E9] text-white px-6 py-2 rounded-md mr-4 transition-colors"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
+            Login
           </a>
           <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/register"
+            className="bg-white text-[#1F2937] border border-[#E5E7EB] px-6 py-2 rounded-md hover:bg-gray-100"
           >
-            Read our docs
+            Register
           </a>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      </section>
+
+      {/* ✅ Features Section */}
+      <section id="features" className="py-20">
+        <div className="max-w-5xl mx-auto px-4 text-center">
+          <h3 className="text-3xl font-semibold mb-8">Core Features</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+            {[
+              '✔️ Role-based Authentication (Student/Teacher)',
+              '✔️ Course Creation, Enrollment & Management',
+              '✔️ Share Study Materials (PDFs, Videos, Links)',
+              '✔️ Submit & Grade Assignments',
+              '✔️ Personalized Dashboards',
+              '✔️ Live Classes & Chat',
+              '✔️ AI-Powered Q&A Chatbot'
+            ].map((feature, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-2xl shadow-md p-5 text-[#1F2937]"
+              >
+                {feature}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ✅ Testimonials Section */}
+      <section id="testimonials" className="py-20 bg-white">
+        <div className="max-w-3xl mx-auto text-center">
+          <h3 className="text-3xl font-semibold mb-8">What People Say</h3>
+          <blockquote className="italic text-[#6B7280] mb-4">
+            "EduSphere made online teaching effortless!" – <strong>A Teacher</strong>
+          </blockquote>
+          <blockquote className="italic text-[#6B7280]">
+            "Assignments, chats, and materials all in one place." – <strong>A Student</strong>
+          </blockquote>
+        </div>
+      </section>
+
+      {/* ✅ Contact Section */}
+      <section id="contact" className="py-20 bg-[#F9FAFB]">
+        <div className="max-w-xl mx-auto text-center">
+          <h3 className="text-3xl font-semibold mb-6">Contact Us</h3>
+          <p className="text-[#6B7280] mb-4">Have questions or feedback? Reach out!</p>
+          <a href="mailto:support@edusphere.com" className="text-[#0EA5E9] underline">
+            support@edusphere.com
+          </a>
+        </div>
+      </section>
+
+      {/* ✅ Footer */}
+      <footer className="py-6 text-center text-sm text-[#6B7280] border-t border-[#E5E7EB]">
+        © 2025 EduSphere. Built by Fahad Ali.
       </footer>
-    </div>
+    </main>
   );
 }
