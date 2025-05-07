@@ -7,7 +7,7 @@ import useUserSession from "@/app/lib/useUserSession";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 
 export default function CourseDetailPage() {
-  const { id } = useParams(); // assignment ID
+  const { id } = useParams();
   const { user } = useUserSession({ redirectIfNoSession: false });
 
   const [assignment, setAssignment] = useState(null);
@@ -20,7 +20,6 @@ export default function CourseDetailPage() {
   const [isLate, setIsLate] = useState(false);
   <time datetime="2016-10-25" suppressHydrationWarning />;
 
-  // Extract role and studentID
   useEffect(() => {
     if (user) {
       const userRole = user.user_metadata.role;
@@ -88,7 +87,6 @@ export default function CourseDetailPage() {
       raw_due_date: dueDateObj,
     };
 
-    // If student, also fetch submission data
     if (role === "student") {
       const { data: submissionData, error: submissionError } = await supabase
         .from("submissions")
@@ -103,14 +101,12 @@ export default function CourseDetailPage() {
 
       formattedAssignment.submission = submissionData || null;
 
-      // Get the file URL from assignment submission
-
       setIsSubmitted(!!submissionData);
-      // Determine lateness for students
+  
       if (submissionData) {
-        setIsLate(submissionData.is_late); // Use actual value from DB
+        setIsLate(submissionData.is_late); 
       } else {
-        setIsLate(new Date() > dueDateObj); // No submission yet, check if due date has passed
+        setIsLate(new Date() > dueDateObj); 
       }
     }
 
@@ -130,7 +126,7 @@ export default function CourseDetailPage() {
     if (!files.length && !subUrls) return alert("Please upload at least one file.");
     if (!assignment) return alert("Assignment not loaded yet.");
 
-    const dueDate = new Date(assignment.raw_due_date); // Use raw date
+    const dueDate = new Date(assignment.raw_due_date);
     const isLateSubmission = new Date() > dueDate;
 
     const uploadedFileUrls = [];
@@ -141,7 +137,6 @@ export default function CourseDetailPage() {
       : [];
 
     for (const file of files) {
-      // Check if the file already exists in the existing submission
       const fileExists = existingFileUrls.some((url) => {
         const fileName = file.name.split(".")[0];
         const existingFileName = url
@@ -151,7 +146,7 @@ export default function CourseDetailPage() {
       });
 
       if (fileExists) {
-        continue; // Skip uploading this file if it already exists
+        continue; 
       }
 
       setLoading(true);
@@ -170,7 +165,6 @@ export default function CourseDetailPage() {
       }
       if (uploadError) {
         console.error("File upload failed:", uploadError.message);
-        // alert("File upload failed. Try again.");
         return;
       }
 
@@ -210,35 +204,7 @@ export default function CourseDetailPage() {
     }
   };
 
-  // const handleUnsubmit = async () => {
-  //   const { error } = await supabase
-  //     .from("submissions")
-  //     .delete()
-  //     .eq("assignment_id", id)
-  //     .eq("student_id", user.id);
-
-  //   if (error) {
-  //     console.error("Unsubmit failed:", error.message);
-  //   } else {
-  //     setIsSubmitted(false);
-  //     setFiles([]);
-  //   }
-  // };
   const handleUnsubmit = async () => {
-    // Delete submission entry from the database
-    // const { data: submissionData, error: submissionError } = await supabase
-    //   .from("submissions")
-    //   .select("file_url")
-    //   .eq("assignment_id", id)
-    //   .eq("student_id", user.id)
-    //   .single();
-
-    // if (submissionError) {
-    //   console.error("Unsubmit failed:", submissionError.message);
-    //   return;
-    // }
-
-    // Delete the submission record from the database
     const { error } = await supabase
       .from("submissions")
       .delete()
@@ -249,14 +215,9 @@ export default function CourseDetailPage() {
       console.error("Unsubmit failed:", error.message);
     } else {
       setIsSubmitted(false);
-      // setFiles([]); // Clear selected files
     }
   };
 
-  const handleShowForm = () => {
-    // For teachers: show grading form/modal (to be implemented)
-    alert("Marking feature to be implemented.");
-  };
   if (loading) return <LoadingSpinner />;
   if (!assignment) return <p className="p-4">No assignment found.</p>;
 
@@ -405,14 +366,6 @@ export default function CourseDetailPage() {
               </button>
             )}
 
-            {role === "teacher" && (
-              <button
-                onClick={handleShowForm}
-                className="bg-[#4F46E5] text-white px-4 py-2 rounded hover:bg-[#4338ca] transition"
-              >
-                Mark
-              </button>
-            )}
           </div>
         </div>
       </div>
