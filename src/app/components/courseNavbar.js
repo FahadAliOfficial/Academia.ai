@@ -20,17 +20,24 @@ export default function CourseNavbar({ activeTab, setActiveTab }) {
         >
           Messages
         </button>
+        
         <button
-          onClick={() => setActiveTab('enrollments')}
-          className={`py-2 px-4 rounded cursor-pointer  ${activeTab === 'enrollments' ? 'bg-[#4F46E5] text-white' : 'text-gray-700 hover:bg-gray-200'}`}
+          onClick={() => setActiveTab('material')}
+          className={`py-2 px-4 rounded cursor-pointer ${activeTab === 'material' ? 'bg-[#4F46E5] text-white' : 'text-gray-700 hover:bg-gray-200'}`}
         >
-          Enrollments
+          Course Material
         </button>
         <button
           onClick={() => setActiveTab('assignments')}
           className={`py-2 px-4 rounded cursor-pointer ${activeTab === 'assignments' ? 'bg-[#4F46E5] text-white' : 'text-gray-700 hover:bg-gray-200'}`}
         >
           Assignments
+        </button>
+        <button
+          onClick={() => setActiveTab('enrollments')}
+          className={`py-2 px-4 rounded cursor-pointer  ${activeTab === 'enrollments' ? 'bg-[#4F46E5] text-white' : 'text-gray-700 hover:bg-gray-200'}`}
+        >
+          Enrollments
         </button>
       </div>
     </nav>

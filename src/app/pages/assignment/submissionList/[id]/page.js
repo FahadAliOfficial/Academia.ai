@@ -19,7 +19,7 @@ export default function SubmissionsListPage() {
   const [feedback, setFeedback] = useState("");
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [maxScore, setMaxScore] = useState(100); // default, optionally fetched
-  const [subUrls, setSubUrls] = useState([]);  // Add this state for file URLs
+  const [subUrls, setSubUrls] = useState([]); // Add this state for file URLs
 
   useEffect(() => {
     if (!id || !user) return;
@@ -39,48 +39,47 @@ export default function SubmissionsListPage() {
       setSubmissions(data);
       setLoading(false);
     };
-    
+
     fetchSubmissions();
   }, [id, user]);
-  
+
   useEffect(() => {
     if (!id || !submissions.length) return;
-  
+
     const fetchFiles = async () => {
       setLoading(true);
       const allUrls = [];
-  
+
       const urlsMap = {};
 
-for (const submission of submissions) {
-  const studentId = submission.student_id;
-  const folderPath = `assignments/${id}/${studentId}`;
+      for (const submission of submissions) {
+        const studentId = submission.student_id;
+        const folderPath = `assignments/${id}/${studentId}`;
 
-  const { data: subs, error } = await supabase.storage
-    .from("submissions")
-    .list(folderPath);
+        const { data: subs, error } = await supabase.storage
+          .from("submissions")
+          .list(folderPath);
 
-  if (error || !subs) continue;
+        if (error || !subs) continue;
 
-  urlsMap[studentId] = subs.map(file => {
-    const { data } = supabase.storage
-      .from("submissions")
-      .getPublicUrl(`${folderPath}/${file.name}`);
-    return {
-      name: file.name,
-      url: data.publicUrl,
-    };
-  });
-}
+        urlsMap[studentId] = subs.map((file) => {
+          const { data } = supabase.storage
+            .from("submissions")
+            .getPublicUrl(`${folderPath}/${file.name}`);
+          return {
+            name: file.name,
+            url: data.publicUrl,
+          };
+        });
+      }
 
-      setSubUrls(urlsMap);  // 👈 Map studentId -> [files]  
-  
+      setSubUrls(urlsMap); // 👈 Map studentId -> [files]
+
       setLoading(false);
     };
-  
+
     fetchFiles();
   }, [submissions, id]);
-  
 
   const handleShowForm = (submission) => {
     setSelectedSubmission(submission);
@@ -194,22 +193,22 @@ for (const submission of submissions) {
                       : sub.feedback}
                   </td>
                   <td className="p-4 border-b">
-                  {subUrls[sub.student_id]?.length > 0 ? (
-    subUrls[sub.student_id].map((file, i) => (
-      <div key={i}>
-        <a
-          href={file.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[#4F46E5] hover:underline font-medium"
-        >
-          {file.name}
-        </a>
-      </div>
-    ))
-  ) : (
-    <span className="text-gray-400">No file</span>
-  )}
+                    {subUrls[sub.student_id]?.length > 0 ? (
+                      subUrls[sub.student_id].map((file, i) => (
+                        <div key={i}>
+                          <a
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#4F46E5] hover:underline font-medium"
+                          >
+                            {file.name}
+                          </a>
+                        </div>
+                      ))
+                    ) : (
+                      <span className="text-gray-400">No file</span>
+                    )}
                   </td>
                   <td className="p-4 border-b">
                     <button

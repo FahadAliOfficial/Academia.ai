@@ -7,6 +7,7 @@ import Enrollments from '@/app/components/Enrollments'
 import Assignments from '@/app/components/Assignments'
 import CourseNavbar from '@/app/components/courseNavbar'
 import Messages from '@/app/components/Messages'
+import CourseMaterials from '@/app/components/courseMaterial'
 
 export default function CourseDetailPage() {
   const { id } = useParams()
@@ -14,7 +15,6 @@ export default function CourseDetailPage() {
 
   useEffect(() => {
     if (!id) return
-
   }, [id])
 
 return (
@@ -27,6 +27,8 @@ return (
       {activeTab === 'messages' && <Messages id={id} />}
       {activeTab === 'enrollments' && <Enrollments id={id}/>}
       {activeTab === 'assignments' && <Assignments id={id} />}
+      {activeTab === 'material' && <CourseMaterials id={id} />}
+      {}
     </div>
   </div>
 )
