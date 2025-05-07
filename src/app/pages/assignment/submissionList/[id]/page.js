@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/app/lib/supabaseClient";
 import useUserSession from "@/app/lib/useUserSession";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
+import { ChartNoAxesColumnDecreasing } from "lucide-react";
 
 export default function SubmissionsListPage() {
   const { id } = useParams(); // assignment ID
@@ -18,6 +19,7 @@ export default function SubmissionsListPage() {
   const [feedback, setFeedback] = useState("");
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [maxScore, setMaxScore] = useState(100); // default, optionally fetched
+  const [subUrls, setSubUrls] = useState([]);  // Add this state for file URLs
 
   useEffect(() => {
     if (!id || !user) return;
@@ -34,13 +36,51 @@ export default function SubmissionsListPage() {
         alert("Failed to fetch submissions: " + error.message);
         return;
       }
-
       setSubmissions(data);
       setLoading(false);
     };
-
+    
     fetchSubmissions();
   }, [id, user]);
+  
+  useEffect(() => {
+    if (!id || !submissions.length) return;
+  
+    const fetchFiles = async () => {
+      setLoading(true);
+      const allUrls = [];
+  
+      const urlsMap = {};
+
+for (const submission of submissions) {
+  const studentId = submission.student_id;
+  const folderPath = `assignments/${id}/${studentId}`;
+
+  const { data: subs, error } = await supabase.storage
+    .from("submissions")
+    .list(folderPath);
+
+  if (error || !subs) continue;
+
+  urlsMap[studentId] = subs.map(file => {
+    const { data } = supabase.storage
+      .from("submissions")
+      .getPublicUrl(`${folderPath}/${file.name}`);
+    return {
+      name: file.name,
+      url: data.publicUrl,
+    };
+  });
+}
+
+      setSubUrls(urlsMap);  // 👈 Map studentId -> [files]  
+  
+      setLoading(false);
+    };
+  
+    fetchFiles();
+  }, [submissions, id]);
+  
 
   const handleShowForm = (submission) => {
     setSelectedSubmission(submission);
@@ -154,14 +194,22 @@ export default function SubmissionsListPage() {
                       : sub.feedback}
                   </td>
                   <td className="p-4 border-b">
-                    <a
-                      href={sub.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#4F46E5] hover:underline font-medium"
-                    >
-                      View File
-                    </a>
+                  {subUrls[sub.student_id]?.length > 0 ? (
+    subUrls[sub.student_id].map((file, i) => (
+      <div key={i}>
+        <a
+          href={file.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#4F46E5] hover:underline font-medium"
+        >
+          {file.name}
+        </a>
+      </div>
+    ))
+  ) : (
+    <span className="text-gray-400">No file</span>
+  )}
                   </td>
                   <td className="p-4 border-b">
                     <button
