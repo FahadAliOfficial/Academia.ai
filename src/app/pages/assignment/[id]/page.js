@@ -97,33 +97,40 @@ export default function CourseDetailPage() {
     const dueDate = new Date(assignment.raw_due_date); // Use raw date
     const isLateSubmission = new Date() > dueDate;
 
-    const file = files[0];
-    const fileExt = file.name.split(".").pop();
-    const filePath = `assignments/${user.id}/${id}-${Date.now()}.${fileExt}`;
+    const uploadedFileUrls = [];
 
-    // Upload to Supabase Storage
-    const { data: storageData, error: uploadError } = await supabase.storage
-      .from("submissions")
-      .upload(filePath, file);
+    for (const file of files) {
+      setLoading(true);
+      const fileExt = file.name.split(".").pop();
+      const filePath = `assignments/${user.id}/${id}-${Date.now()}.${fileExt}`;
 
-    if (uploadError) {
-      console.error("File upload failed:", uploadError.message);
-      alert("File upload failed. Try again.");
-      return;
+      const { data: storageData, error: uploadError } = await supabase.storage
+        .from("submissions")
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error("File upload failed:", uploadError.message);
+        alert("File upload failed. Try again.");
+        return;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("submissions")
+        .getPublicUrl(filePath);
+
+      const fileUrl = publicUrlData?.publicUrl;
+      if (fileUrl) uploadedFileUrls.push(fileUrl);
     }
-
-    const { data: publicUrlData } = supabase.storage
-      .from("submissions")
-      .getPublicUrl(filePath);
-
-    const fileUrl = publicUrlData?.publicUrl;
 
     // Save to submissions table
     const { error: dbError } = await supabase.from("submissions").insert([
       {
         assignment_id: id,
         student_id: user.id,
-        file_url: fileUrl,
+        file_url:
+          uploadedFileUrls.length === 1
+            ? uploadedFileUrls[0]
+            : uploadedFileUrls,
         is_late: isLateSubmission,
         submitted_at: new Date().toISOString(),
       },
@@ -133,6 +140,7 @@ export default function CourseDetailPage() {
       console.error("Submission failed:", dbError.message);
       alert("Submission failed. Please try again.");
     } else {
+      setLoading(false);
       setIsSubmitted(true);
       setIsLate(isLateSubmission);
     }
@@ -217,19 +225,27 @@ export default function CourseDetailPage() {
 
           {role === "student" && (
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-[#374151] mb-2">
+              
+              {
+                !isSubmitted && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#374151] mb-2">
                 Upload Files
               </h3>
               <input
-                type="file"
-                multiple
-                onChange={handleFileChange}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
-                  file:rounded-md file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-indigo-50 file:text-indigo-700
-                  hover:file:bg-indigo-100"
-              />
+            type="file"
+            multiple
+            onChange={handleFileChange}
+            disabled={!!assignment?.submission?.file_url}
+            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
+              file:rounded-md file:border-0
+              file:text-sm file:font-semibold
+              file:bg-indigo-50 file:text-indigo-700
+              hover:file:bg-indigo-100"
+          />
+                  </div>
+                )
+              }
               {files.length > 0 && (
                 <ul className="mt-3 list-disc list-inside text-sm text-gray-600">
                   {files.map((file, idx) => (
@@ -237,22 +253,37 @@ export default function CourseDetailPage() {
                   ))}
                 </ul>
               )}
+              
             </div>
           )}
-          {assignment?.submission?.file_url  && (
-            <div className="mt-4">
-              <p className="text-sm text-gray-600">Submitted File:</p>
-              <a
-                href={assignment.submission.file_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-indigo-600 underline text-sm"
-                download
-              >
-                Download Submitted File
-              </a>
-            </div>
-          )}
+       {assignment?.submission?.file_url && (
+  <div className="mt-4">
+    <p className="text-sm text-gray-600">Submitted Files:</p>
+    {(() => {
+      // Check if it's a single URL string and split it if necessary
+      const fileUrls = Array.isArray(assignment.submission.file_url)
+        ? assignment.submission.file_url
+        : assignment.submission.file_url
+            .replace(/["[\]"]/g, "")  // Remove any surrounding brackets or quotes
+            .split(',');  // Split the string into individual URLs
+
+      return fileUrls.map((url, idx) => (
+        <div key={idx}>
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-indigo-600 underline text-sm"
+            download
+          >
+            Download File {idx + 1}
+          </a>
+        </div>
+      ));
+    })()}
+  </div>
+)}
+
 
           <div className="flex gap-4">
             {!isSubmitted ? (
