@@ -53,7 +53,6 @@ const CourseMaterials = ({ id }) => {
     const fileName = `${file.name.split(".")[0]}.${fileExt}`;
     const filePath = `${id}/files/${fileName}`;
 
-    // 1. Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("course-materials")
       .upload(filePath, file);
@@ -68,14 +67,12 @@ const CourseMaterials = ({ id }) => {
       return;
     }
 
-    // 2. Get Public URL
     const { data: publicUrlData } = supabase.storage
       .from("course-materials")
       .getPublicUrl(filePath);
 
     const file_url = publicUrlData.publicUrl;
 
-    // 3. Save metadata in DB
     const { data, error } = await supabase
       .from("course_materials")
       .insert([{ description, file_url, course_id: id }])
@@ -106,9 +103,8 @@ const CourseMaterials = ({ id }) => {
       const fileName = fileUrl.split("/").pop();
       const filePath = `course-materials/${id}/files/${decodeURIComponent(fileName)}`;
   
-      console.log("Deleting file at:", filePath); // Log the file path to ensure it's correct
+      console.log("Deleting file at:", filePath);
   
-      // Attempt to remove the file from Supabase storage
       const { error: storageError } = await supabase.storage
         .from("course-materials")
         .remove([filePath]);
@@ -118,7 +114,6 @@ const CourseMaterials = ({ id }) => {
         return;
       }
   
-      // If file is deleted, proceed to delete from database
       const { error: dbError } = await supabase
         .from("course_materials")
         .delete()
@@ -129,7 +124,6 @@ const CourseMaterials = ({ id }) => {
         return;
       }
   
-      // Update local state
       setMaterials((prev) => prev.filter((mat) => mat.id !== materialId));
   
     } catch (err) {
