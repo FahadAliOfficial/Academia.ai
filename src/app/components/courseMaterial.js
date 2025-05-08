@@ -216,13 +216,13 @@ const CourseMaterials = ({ id }) => {
                   setShowForm(false);
                   setNewMaterial({ description: "", file: null, course_id: id });
                 }}
-                className="text-gray-600 px-4 py-2 hover:underline"
+                className="cursor-pointer text-gray-600 px-4 py-2 hover:underline"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="bg-[#4F46E5] text-white px-4 py-2 rounded-lg hover:bg-[#4338ca]"
+                className="cursor-pointer bg-[#4F46E5] text-white px-4 py-2 rounded-lg hover:bg-[#4338ca]"
                 disabled={uploading}
               >
                 {uploading ? "Uploading..." : "Upload"}

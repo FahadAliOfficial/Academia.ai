@@ -171,7 +171,15 @@ const Assignments = ({ id, teacherId }) => {
         <p className="text-[#4F46E5]">No assignments yet.</p>
       ) : (
         <div className="space-y-4">
-          {assignments.map((assignment) => (
+          {assignments
+          .filter((assignment) => {
+            if(userRole ==='student'){
+              return assignment.is_active;
+            }
+            return true;
+          })
+          .map((assignment) => (
+            
             <div
               key={assignment.id}
               className="relative group border border-gray-200 p-4 rounded-lg shadow-sm hover:shadow-md transition bg-white"
