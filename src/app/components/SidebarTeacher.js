@@ -11,7 +11,7 @@ const navItems = [
   { name: 'My Courses', href: '/dashboard/teacher/courses-bar' },
   { name: 'Assignment', href: '/dashboard/teacher/assignment-bar' },
   // { name: 'Grades', href: '/dashboard/teacher/grades' },
-  { name: 'Chatbot', href: '/chatbot' },
+  { name: 'Chatbot', href: '/dashboard/chat-bot'},
   { name: 'Profile', href: '/dashboard/profile' },
   { name: 'Support', href: '/dashboard/support' },
 ]
