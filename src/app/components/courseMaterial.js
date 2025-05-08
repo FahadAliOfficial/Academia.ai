@@ -99,9 +99,10 @@ const CourseMaterials = ({ id }) => {
         console.error("Missing file URL");
         return;
       }
-  
-      const fileName = fileUrl.split("/").pop();
-      const filePath = `course-materials/${id}/files/${decodeURIComponent(fileName)}`;
+      const urlPrefix = "https://msyjkqyzbolwgcdyrmnq.supabase.co/storage/v1/object/public/course-materials/";
+      const relativePathEncoded = fileUrl.replace(urlPrefix, "");
+      const filePath = decodeURIComponent(relativePathEncoded);
+
   
       console.log("Deleting file at:", filePath);
   
@@ -168,7 +169,7 @@ const CourseMaterials = ({ id }) => {
                 View Material
               </a>
 
-
+            <p>{mat.file_url}</p>
               {userRole === "teacher" && (
                 <button
                   onClick={() => handleDelete(mat.id, mat.file_url)}
