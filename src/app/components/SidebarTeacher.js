@@ -12,7 +12,7 @@ const navItems = [
   { name: 'Assignment', href: '/dashboard/teacher/assignment-bar' },
   // { name: 'Grades', href: '/dashboard/teacher/grades' },
   { name: 'Chatbot', href: '/dashboard/chat-bot'},
-  { name: 'Live Class', href: '/dashboard/LiveClass'},
+  { name: 'Live Classes', href: '/dashboard/LiveClass'},
   { name: 'Profile', href: '/dashboard/profile' },
   { name: 'Support', href: '/dashboard/support' },
 ]

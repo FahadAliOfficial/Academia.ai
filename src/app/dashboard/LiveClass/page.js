@@ -29,30 +29,42 @@ const LiveClasses = () => {
     }
   }, [user]);
 
-  useEffect(() => {
-    if(!userRole) return;
-    if(userRole ==='teacher'){
+useEffect(() => {
+  if (!userRole || !user) return;
 
-      const fetchLiveClasses = async () => {
-        setLoading(true);
-        const { data, error } = await supabase.from("live_classes").select("*");
-        if (!error) setLiveClasses(data);
-        setLoading(false);
-      };
-  
-      fetchLiveClasses();
+  const fetchLiveClasses = async () => {
+    setLoading(true);
+
+    if (userRole === "teacher") {
+      const { data, error } = await supabase
+        .from("live_classes")
+        .select("*");
+      if (!error) setLiveClasses(data);
+    } else {
+      // For students: get enrolled course_ids
+      const { data: enrollments, error: enrollmentError } = await supabase
+        .from("enrollments")
+        .select("course_id")
+        .eq("user_id", user.id);
+
+      if (!enrollmentError && enrollments.length > 0) {
+        const courseIds = enrollments.map((e) => e.course_id);
+
+        const { data: classes, error: classError } = await supabase
+          .from("live_classes")
+          .select("*")
+          .in("course_id", courseIds);
+
+        if (!classError) setLiveClasses(classes);
+      }
     }
-    else{
-      const fetchLiveClasses = async () => {
-        setLoading(true);
-        const { data, error } = await supabase.from("live_classes").select("*");
-        if (!error) setLiveClasses(data);
-        setLoading(false);
-      };
-  
-      fetchLiveClasses();
-    }
-  }, []);
+
+    setLoading(false);
+  };
+
+  fetchLiveClasses();
+}, [userRole, user]);
+
 
   useEffect(() => {
     const fetchCourses = async () => {
