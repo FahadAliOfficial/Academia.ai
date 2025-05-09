@@ -11,6 +11,7 @@ const navItems = [
   { name: 'Courses Enrolled', href: '/dashboard/student/courses-bar' },
   { name: 'Assignments', href: '/dashboard/student/assignment-bar' },
   { name: 'Chatbot', href: '/chatbot' },
+  { name: 'Live Class', href: '/dashboard/LiveClass'},
   { name: 'Profile', href: '/dashboard/profile' },
   { name: 'Support', href: '/dashboard/support' },
 ]
