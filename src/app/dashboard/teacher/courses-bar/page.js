@@ -6,6 +6,8 @@ import { supabase } from "@/app/lib/supabaseClient"; // Adjust the path to your 
 import CourseCard from "@/app/components/CourseCard"; // Adjust the path to your CourseCard component
 import useUserSession from "@/app/lib/useUserSession";
 import { useRouter } from "next/navigation";
+<time datetime="2016-10-25" suppressHydrationWarning />;
+
 
 export default function CoursesPage() {
     

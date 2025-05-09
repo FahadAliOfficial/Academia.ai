@@ -64,8 +64,9 @@ export default function CoursesPage() {
       const { data: allCourses, error: allCoursesError } = await supabase
         .from("courses")
         .select(
-          "title, description, thumbnail_url, created_by, created_at, updated_at, status, id"
-        );
+          "title, description, thumbnail_url, created_by, created_at, updated_at, id"
+        )
+        .eq("status", "published");
   
       if (allCoursesError) {
         console.error("Error fetching all courses:", allCoursesError);
