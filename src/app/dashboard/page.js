@@ -158,10 +158,12 @@ export default function DashboardPage() {
           .from("submissions")
           .select("assignment_id")
           .eq("student_id", user.id);
-        const submittedAssignmentIds = submissions?.map(s => s.assignment_id) || [];
+        const submittedAssignmentIds =
+          submissions?.map((s) => s.assignment_id) || [];
         const submittedSet = new Set(submittedAssignmentIds);
-        const missingAssignments = assignmentIds.filter(id => !submittedSet.has(id));
-
+        const missingAssignments = assignmentIds.filter(
+          (id) => !submittedSet.has(id)
+        );
 
         setStudentStats({
           coursesEnrolled: courseIds.length,
@@ -173,29 +175,23 @@ export default function DashboardPage() {
         const { data: courses } = await supabase
           .from("courses")
           .select("id")
-          .eq("teacher_id", user.id);
+          .eq("created_by", user.id);
 
         const courseIds = courses.map((c) => c.id);
-
-        const { data: assignments } = await supabase
-          .from("assignments")
-          .select("*")
-          .in("course_id", courseIds);
 
         const { data: pendingReviews } = await supabase
           .from("submissions")
           .select("*")
-          .eq("reviewed", false);
+          .or("feedback.is.null,grade.is.null");
 
         const { data: upcomingLectures } = await supabase
           .from("live_classes")
           .select("*")
           .in("course_id", courseIds)
-          .gt("date", new Date().toISOString()); // Adjust based on your field
+          .gt("scheduled_at", new Date().toISOString()); // Adjust based on your field
 
         setTeacherStats({
           totalCourses: courseIds.length,
-          totalAssignments: assignments?.length || 0,
           pendingReviews: pendingReviews?.length || 0,
           remainingLectures: upcomingLectures?.length || 0,
         });
@@ -236,7 +232,9 @@ export default function DashboardPage() {
             <h3 className="text-lg font-semibold text-[#4F46E5]">
               Total Assignments
             </h3>
-            <p className="text-2xl text-[#1F2937] mt-1">{studentStats.totalAssignments}</p>
+            <p className="text-2xl text-[#1F2937] mt-1">
+              {studentStats.totalAssignments}
+            </p>
           </div>
           <div className="bg-white p-4 rounded-2xl shadow-md">
             <h3 className="text-lg font-semibold text-[#4F46E5]">
@@ -253,25 +251,25 @@ export default function DashboardPage() {
             <h3 className="text-lg font-semibold text-[#4F46E5]">
               Total Courses
             </h3>
-            <p className="text-2xl text-[#1F2937] mt-1">5</p>
+            <p className="text-2xl text-[#1F2937] mt-1">{teacherStats.totalCourses}</p>
           </div>
           <div className="bg-white p-4 rounded-2xl shadow-md">
             <h3 className="text-lg font-semibold text-[#4F46E5]">
-              Total Assignments
+              Tasks To Complete
             </h3>
-            <p className="text-2xl text-[#1F2937] mt-1">3</p>
+            <p className="text-2xl text-[#1F2937] mt-1">{todos.length}</p>
           </div>
           <div className="bg-white p-4 rounded-2xl shadow-md">
             <h3 className="text-lg font-semibold text-[#4F46E5]">
               Pending Reviews
             </h3>
-            <p className="text-2xl text-[#1F2937] mt-1">4</p>
+            <p className="text-2xl text-[#1F2937] mt-1">{teacherStats.pendingReviews}</p>
           </div>
           <div className="bg-white p-4 rounded-2xl shadow-md">
             <h3 className="text-lg font-semibold text-[#4F46E5]">
               Remaining Lectures
             </h3>
-            <p className="text-2xl text-[#1F2937] mt-1">2</p>
+            <p className="text-2xl text-[#1F2937] mt-1">{teacherStats.remainingLectures}</p>
           </div>
         </div>
       )}
