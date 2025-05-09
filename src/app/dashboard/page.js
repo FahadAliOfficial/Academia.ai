@@ -14,17 +14,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user && user.user_metadata?.role) {
-      // user.user_metadata.role.toLowerCase();
       setRole(user.user_metadata.role.toLowerCase());
-      // Redirect to role-specific page
-      // router.push(`/dashboard/${role}`);
     }
   }, [user, router]);
 
-// if (loading || !user)  return <LoadingSpinner />
-  
-
-  // return <LoadingSpinner/>;
 
 
 
@@ -203,11 +196,11 @@ export default function DashboardPage() {
             value={newTodo}
             onChange={(e) => setNewTodo(e.target.value)}
             placeholder="Add a new task..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-black"
+            className="flex-1 px-4 py-2 border border-black rounded-lg focus:border-[#4F46E5] outline-none text-black"
           />
           <button
             onClick={handleAddTodo}
-            className="bg-[#4F46E5] text-white px-4 py-2 rounded-lg hover:bg-[#4338ca] transition"
+            className="bg-[#4F46E5] text-white px-4 py-2 cursor-pointer rounded-lg hover:bg-[#4338ca] transition"
           >
             Add
           </button>

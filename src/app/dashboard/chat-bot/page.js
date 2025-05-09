@@ -114,7 +114,7 @@ function ChatbotPage() {
   const handleSend = async () => {
     if (!message.trim() || !selectedCourseId || !apiKey) return;
 
-    setchatW(true); // Disable UI interactions
+    setchatW(true); 
 
     let newSessionId = sessionId;
     let newSessionName = activeSessionName;
@@ -190,9 +190,9 @@ function ChatbotPage() {
         };
         await supabase.from("bot_chat_history").insert(botError);
         setHistory((prev) => [...prev, botError]);
-        setchatW(false); // Re-enable UI
+        setchatW(false);
         setMessage("");
-        return; // Stop further execution
+        return;
 
         // throw new Error(userFriendlyError);
       }
@@ -208,7 +208,7 @@ function ChatbotPage() {
 
       await supabase.from("bot_chat_history").insert(botReply);
       setHistory((prev) => [...prev, botReply]);
-      setchatW(false); // Re-enable UI
+      setchatW(false);
     } catch (error) {
       const botError = {
         id: crypto.randomUUID(),
@@ -218,8 +218,8 @@ function ChatbotPage() {
         message: error.message || "Error fetching response from backend.",
         session_id: newSessionId,
       };
-      setMessage(""); // Clear message
-      setchatW(false); // Re-enable UI
+      setMessage(""); 
+      setchatW(false);
       await supabase.from("bot_chat_history").insert(botError);
       setHistory((prev) => [...prev, botError]);
       console.error("Error:", error);
