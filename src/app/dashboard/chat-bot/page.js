@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/app/lib/supabaseClient";
@@ -15,6 +15,7 @@ function ChatbotPage() {
   const [sessions, setSessions] = useState([]);
   const [activeSessionName, setActiveSessionName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [chatW, setchatW] = useState(false);
   const [courses, setCourses] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState("");
   const [role, setRole] = useState("");
@@ -28,7 +29,9 @@ function ChatbotPage() {
   useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
-      const { data, error } = await supabase.from("courses").select("id, title");
+      const { data, error } = await supabase
+        .from("courses")
+        .select("id, title");
       if (error) {
         alert("Error fetching courses");
         return;
@@ -106,10 +109,12 @@ function ChatbotPage() {
     };
 
     fetchChat();
-  }, [sessionId]);
+  }, [sessionId, selectedCourseId]);
 
   const handleSend = async () => {
-    if (!message.trim() || !selectedCourseId) return;
+    if (!message.trim() || !selectedCourseId || !apiKey) return;
+
+    setchatW(true); // Disable UI interactions
 
     let newSessionId = sessionId;
     let newSessionName = activeSessionName;
@@ -145,17 +150,81 @@ function ChatbotPage() {
     await supabase.from("bot_chat_history").insert(userMessage);
     setHistory((prev) => [...prev, userMessage]);
 
-    const botReply = {
-      id: crypto.randomUUID(),
-      course_id: selectedCourseId,
-      user_id: userId,
-      sender: "bot",
-      message: `This is a placeholder response to: "${message}"`,
-      session_id: newSessionId,
-    };
+    try {
+      const response = await fetch("http://localhost:5000/load_vector_db", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          api_key: apiKey,
+          course_id: selectedCourseId,
+          query: message,
+        }),
+      });
 
-    await supabase.from("bot_chat_history").insert(botReply);
-    setHistory((prev) => [...prev, botReply]);
+      const data = await response.json();
+
+      if (!response.ok) {
+        let userFriendlyError = "Something went wrong. Please try again.";
+
+        if (response.status === 404 && data.error.includes("No vector DB")) {
+          userFriendlyError =
+            "The teacher hasn't uploaded any course material yet.";
+        } else if (
+          response.status === 400 &&
+          data.error.includes("Missing required fields")
+        ) {
+          userFriendlyError =
+            "Missing input data. Please ensure all fields are filled.";
+        } else if (data.error) {
+          userFriendlyError = data.error;
+        }
+        const botError = {
+          id: crypto.randomUUID(),
+          course_id: selectedCourseId,
+          user_id: userId,
+          sender: "bot",
+          message: userFriendlyError,
+          session_id: newSessionId,
+        };
+        await supabase.from("bot_chat_history").insert(botError);
+        setHistory((prev) => [...prev, botError]);
+        setchatW(false); // Re-enable UI
+        setMessage("");
+        return; // Stop further execution
+
+        // throw new Error(userFriendlyError);
+      }
+
+      const botReply = {
+        id: crypto.randomUUID(),
+        course_id: selectedCourseId,
+        user_id: userId,
+        sender: "bot",
+        message: data.response,
+        session_id: newSessionId,
+      };
+
+      await supabase.from("bot_chat_history").insert(botReply);
+      setHistory((prev) => [...prev, botReply]);
+      setchatW(false); // Re-enable UI
+    } catch (error) {
+      const botError = {
+        id: crypto.randomUUID(),
+        course_id: selectedCourseId,
+        user_id: userId,
+        sender: "bot",
+        message: error.message || "Error fetching response from backend.",
+        session_id: newSessionId,
+      };
+      setMessage(""); // Clear message
+      setchatW(false); // Re-enable UI
+      await supabase.from("bot_chat_history").insert(botError);
+      setHistory((prev) => [...prev, botError]);
+      console.error("Error:", error);
+    }
+
     setMessage("");
   };
 
@@ -167,96 +236,114 @@ function ChatbotPage() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen flex flex-col">
-    <h1 className="text-2xl text-[#4F46E5] font-bold mb-4">AI Course Assistant</h1>
-  
-    <div className="mb-4">
-      <label className="block text-lg font-medium mb-1 text-[#4F46E5]">Select a Course</label>
-      <select
-        className="p-2 border text-black border-gray-700 rounded w-full"
-        value={selectedCourseId}
-        onChange={(e) => {
-          setSelectedCourseId(e.target.value);
-          setSessionId(null);
-          setSessions([]);
-          setHistory([]);
-        }}
-      >
-        <option value="">-- Choose a Course --</option>
-        {courses.map((course) => (
-          <option key={course.id} value={course.id}>
-            {course.title}
-          </option>
-        ))}
-      </select>
-    </div>
-  
-    {selectedCourseId && (
-      <>
-        <div className="mb-2 overflow-x-auto w-full">
-          <button
-            className="px-3 py-1 rounded border bg-green-600 text-white"
-            onClick={handleNewSession}
-          >
-            + New Chat
-          </button>
-          {sessions.map((s) => (
-            <button
-              key={s.session_id}
-              className={`px-3 py-1 ml-2 mt-1 rounded border ${
-                sessionId === s.session_id
-                  ? "bg-[#4F46E5] text-white"
-                  : "bg-white border-gray-300"
-              }`}
-              onClick={() => {
-                setSessionId(s.session_id);
-                setActiveSessionName(s.session_name);
-              }}
-            >
-              {s.session_name}
-            </button>
+      <h1 className="text-2xl text-[#4F46E5] font-bold mb-4">
+        AI Course Assistant
+      </h1>
+
+      <div className="mb-4">
+        <label className="block text-lg font-medium mb-1 text-[#4F46E5]">
+          Select a Course
+        </label>
+        <select
+          className="p-2 border text-black border-gray-700 rounded w-full"
+          value={selectedCourseId}
+          onChange={(e) => {
+            setSelectedCourseId(e.target.value);
+            setSessionId(null);
+            setSessions([]);
+            setHistory([]);
+          }}
+        >
+          <option value="">-- Choose a Course --</option>
+          {courses.map((course) => (
+            <option key={course.id} value={course.id}>
+              {course.title}
+            </option>
           ))}
-        </div>
-  
-        <div className="bg-white p-4 shadow rounded mb-4 h-[60vh] overflow-y-auto">
-          {loading ? (
-            <p className="text-gray-500">Loading chat history...</p>
-          ) : (
-            <>
-              {history.map((h, i) => (
-                <div key={i} className="mb-2">
-                  <strong
-                    className={h.sender === "bot" ? "text-green-600" : "text-[#4F46E5]"}
-                  >
-                    {h.sender}:
-                  </strong>
-                  <span className="text-[#374151] ml-1 whitespace-pre-wrap">{h.message}</span>
-                </div>
-              ))}
-              {history.length > 0 && (
-                <div className="text-sm text-center text-gray-400 mb-2">--- Chat History ---</div>
-              )}
-            </>
-          )}
-        </div>
-  
-        <div className="flex gap-2">
-          <input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="flex-1 p-2 border text-black border-black rounded focus:border-[#4F46E5] outline-none"
-            placeholder="Ask your question..."
-          />
-          <button
-            onClick={handleSend}
-            className="px-4 py-2 bg-blue-600 text-white rounded"
-          >
-            Send
-          </button>
-        </div>
-      </>
-    )}
-  </div>
-  
+        </select>
+      </div>
+
+      {selectedCourseId && (
+        <>
+          <div className="mb-2 overflow-x-auto w-full">
+            <button
+              className="px-3 py-1 rounded border bg-green-600 text-white"
+              onClick={handleNewSession}
+            >
+              + New Chat
+            </button>
+            {sessions.map((s) => (
+              <button
+                key={s.session_id}
+                className={`px-3 py-1 ml-2 mt-1 rounded border ${
+                  sessionId === s.session_id
+                    ? "bg-[#4F46E5] text-white"
+                    : "bg-white border-gray-300"
+                }`}
+                onClick={() => {
+                  setSessionId(s.session_id);
+                  setActiveSessionName(s.session_name);
+                }}
+              >
+                {s.session_name}
+              </button>
+            ))}
+          </div>
+
+          <div className="bg-white p-4 shadow rounded mb-4 h-[60vh] overflow-y-auto">
+            {!loading && history.length === 0 && (
+              <p className="text-gray-500">
+                No messages yet. Ask a question to begin.
+              </p>
+            )}
+            {loading ? (
+              <p className="text-gray-500">Loading chat history...</p>
+            ) : (
+              <>
+                {history.map((h, i) => (
+                  <div key={i} className="mb-2">
+                    <strong
+                      className={
+                        h.sender === "bot" ? "text-green-600" : "text-[#4F46E5]"
+                      }
+                    >
+                      {h.sender}:
+                    </strong>
+                    <span className="text-[#374151] ml-1 whitespace-pre-wrap">
+                      {h.message}
+                    </span>
+                  </div>
+                ))}
+                {history.length > 0 && (
+                  <div className="text-sm text-center text-gray-400 mb-2">
+                    --- Chat History ---
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            <input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="flex-1 p-2 border text-black border-black rounded focus:border-[#4F46E5] outline-none"
+              placeholder="Ask your question..."
+              disabled={chatW}
+            />
+            <button
+              onClick={handleSend}
+              className={`px-4 py-2 text-white rounded ${
+                chatW ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600"
+              }`}
+              disabled={chatW}
+            >
+              {chatW ? "Sending..." : "Send"}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
