@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import useUserSession from "@/app/lib/useUserSession";
-import { supabase } from '@/app/lib/supabaseClient'
-import LoadingSpinner from '@/app/components/LoadingSpinner'
+import { supabase } from "@/app/lib/supabaseClient";
+import LoadingSpinner from "@/app/components/LoadingSpinner";
 
 export default function DashboardPage() {
   const { user, loading } = useUserSession({ redirectIfNoSession: true });
   const router = useRouter();
-  const [role, setRole] = useState('');
-  <time datetime="2016-10-25" suppressHydrationWarning />
+  const [role, setRole] = useState("");
+  <time datetime="2016-10-25" suppressHydrationWarning />;
 
   useEffect(() => {
     if (user && user.user_metadata?.role) {
@@ -18,121 +18,194 @@ export default function DashboardPage() {
     }
   }, [user, router]);
 
-
-
-
-
-  const [userData, setUserData] = useState(null)
-  const [userID, setUserID] = useState('')
+  const [userData, setUserData] = useState(null);
+  const [userID, setUserID] = useState("");
 
   // Auth and Role Check
   useEffect(() => {
     const fetchData = async () => {
-      const { data, error: authError } = await supabase.auth.getUser()
+      const { data, error: authError } = await supabase.auth.getUser();
 
       if (authError || !data?.user) {
-        router.push('/login')
-        return
+        router.push("/login");
+        return;
       }
 
-      const user = data.user
-      setUserID(user.id)
+      const user = data.user;
+      setUserID(user.id);
 
       const { data: userDetails, error: userError } = await supabase
-        .from('users')
-        .select('name, role')
-        .eq('id', user.id)
-        .single()
+        .from("users")
+        .select("name, role")
+        .eq("id", user.id)
+        .single();
 
       if (userError || !userDetails) {
-        router.push('/login')
-        return
+        router.push("/login");
+        return;
       }
 
-      setUserData(userDetails)
-    }
+      setUserData(userDetails);
+    };
 
-    fetchData()
-  }, [router])
+    fetchData();
+  }, [router]);
 
-  const [todos, setTodos] = useState([])
-  const [newTodo, setNewTodo] = useState('')
-  const [editingId, setEditingId] = useState(null)
-  const [editText, setEditText] = useState('')
+  //handling todos
+  const [todos, setTodos] = useState([]);
+  const [newTodo, setNewTodo] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState("");
 
   useEffect(() => {
-    if (userID) fetchTodos()
-  }, [userID])
+    if (userID) fetchTodos();
+  }, [userID]);
 
   const fetchTodos = async () => {
     const { data, error } = await supabase
-      .from('usertodo')
-      .select('id, task, created_at')
-      .eq('user_id', userID)
+      .from("usertodo")
+      .select("id, task, created_at")
+      .eq("user_id", userID);
 
     if (error) {
-      console.error("Error fetching todos:", error)
+      console.error("Error fetching todos:", error);
     } else {
-      setTodos(Array.isArray(data) ? data : [])
+      setTodos(Array.isArray(data) ? data : []);
     }
-  }
+  };
 
   const handleAddTodo = async () => {
-    if (newTodo.trim() !== '') {
+    if (newTodo.trim() !== "") {
       const { data, error } = await supabase
-        .from('usertodo')
+        .from("usertodo")
         .insert([{ task: newTodo, user_id: userID }])
-        .select()
+        .select();
 
       if (error) {
-        console.error("Error adding todo:", error)
+        console.error("Error adding todo:", error);
       } else {
         if (Array.isArray(data)) {
-          setTodos(prev => [...prev, ...data])
+          setTodos((prev) => [...prev, ...data]);
         } else {
-          setTodos(prev => [...prev, data])
+          setTodos((prev) => [...prev, data]);
         }
-        setNewTodo('')
-        fetchTodos()
+        setNewTodo("");
+        fetchTodos();
       }
     }
-  }
+  };
 
   const handleDeleteTodo = async (id) => {
-    const { error } = await supabase
-      .from('usertodo')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from("usertodo").delete().eq("id", id);
 
     if (error) {
-      console.error("Error deleting todo:", error)
+      console.error("Error deleting todo:", error);
     } else {
-      setTodos(todos.filter(todo => todo.id !== id))
+      setTodos(todos.filter((todo) => todo.id !== id));
     }
-  }
+  };
 
   const handleEditTodo = (id, text) => {
-    setEditingId(id)
-    setEditText(text)
-  }
+    setEditingId(id);
+    setEditText(text);
+  };
 
   const handleSaveEdit = async (id) => {
     const { data, error } = await supabase
-      .from('usertodo')
+      .from("usertodo")
       .update({ task: editText })
-      .eq('id', id)
-      .select()
+      .eq("id", id)
+      .select();
 
     if (error) {
-      console.error("Error updating todo:", error)
+      console.error("Error updating todo:", error);
     } else {
-      setTodos(todos.map(todo => todo.id === id ? { ...todo, task: editText } : todo))
-      setEditingId(null)
-      setEditText('')
+      setTodos(
+        todos.map((todo) =>
+          todo.id === id ? { ...todo, task: editText } : todo
+        )
+      );
+      setEditingId(null);
+      setEditText("");
     }
-  }
+  };
 
-  if (!userData) return <LoadingSpinner />
+  const [studentStats, setStudentStats] = useState([]);
+  const [teacherStats, setTeacherStats] = useState([]);
+
+  //dashboard stats
+  useEffect(() => {
+    if (!user || !role) return;
+
+    const fetchStats = async () => {
+      if (role === "student") {
+        const { data: enrolledCourses } = await supabase
+          .from("enrollments")
+          .select("course_id")
+          .eq("user_id", user.id);
+
+        const courseIds = enrolledCourses?.map((e) => e.course_id) || [];
+
+        const { data: assignments } = await supabase
+          .from("assignments")
+          .select("id")
+          .in("course_id", courseIds);
+
+        const assignmentIds = assignments?.map((a) => a.id) || [];
+
+        // Step 2: Get all submissions by the student
+        const { data: submissions } = await supabase
+          .from("submissions")
+          .select("assignment_id")
+          .eq("student_id", user.id);
+        const submittedAssignmentIds = submissions?.map(s => s.assignment_id) || [];
+        const submittedSet = new Set(submittedAssignmentIds);
+        const missingAssignments = assignmentIds.filter(id => !submittedSet.has(id));
+
+
+        setStudentStats({
+          coursesEnrolled: courseIds.length,
+          assignmentsDue: missingAssignments?.length || 0,
+          totalAssignments: assignmentIds?.length || 0,
+          tasksCompleted: todos.length,
+        });
+      } else if (role === "teacher") {
+        const { data: courses } = await supabase
+          .from("courses")
+          .select("id")
+          .eq("teacher_id", user.id);
+
+        const courseIds = courses.map((c) => c.id);
+
+        const { data: assignments } = await supabase
+          .from("assignments")
+          .select("*")
+          .in("course_id", courseIds);
+
+        const { data: pendingReviews } = await supabase
+          .from("submissions")
+          .select("*")
+          .eq("reviewed", false);
+
+        const { data: upcomingLectures } = await supabase
+          .from("live_classes")
+          .select("*")
+          .in("course_id", courseIds)
+          .gt("date", new Date().toISOString()); // Adjust based on your field
+
+        setTeacherStats({
+          totalCourses: courseIds.length,
+          totalAssignments: assignments?.length || 0,
+          pendingReviews: pendingReviews?.length || 0,
+          remainingLectures: upcomingLectures?.length || 0,
+        });
+      }
+    };
+
+    fetchStats();
+  }, [role, user, todos]);
+
+  if (!userData) return <LoadingSpinner />;
 
   return (
     <div className="p-6 bg-[#F9FAFB] min-h-screen overflow-y-auto">
@@ -140,56 +213,73 @@ export default function DashboardPage() {
         Welcome, {userData.name} 🎓
       </h1>
 
-      {
-        role ==='student' && (
-          //student
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-        <div className="bg-white p-4 rounded-2xl shadow-md">
-          <h3 className="text-lg font-semibold text-[#4F46E5]">Courses Enrolled</h3>
-          <p className="text-2xl text-[#1F2937] mt-1">4</p>
+      {role === "student" && (
+        //student
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          <div className="bg-white p-4 rounded-2xl shadow-md">
+            <h3 className="text-lg font-semibold text-[#4F46E5]">
+              Courses Enrolled
+            </h3>
+            <p className="text-2xl text-[#1F2937] mt-1">
+              {studentStats.coursesEnrolled}
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-2xl shadow-md">
+            <h3 className="text-lg font-semibold text-[#4F46E5]">
+              Assignments Due
+            </h3>
+            <p className="text-2xl text-[#1F2937] mt-1">
+              {studentStats.assignmentsDue}
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-2xl shadow-md">
+            <h3 className="text-lg font-semibold text-[#4F46E5]">
+              Total Assignments
+            </h3>
+            <p className="text-2xl text-[#1F2937] mt-1">{studentStats.totalAssignments}</p>
+          </div>
+          <div className="bg-white p-4 rounded-2xl shadow-md">
+            <h3 className="text-lg font-semibold text-[#4F46E5]">
+              Tasks To Complete
+            </h3>
+            <p className="text-2xl text-[#1F2937] mt-1">{todos.length}</p>
+          </div>
         </div>
-        <div className="bg-white p-4 rounded-2xl shadow-md">
-          <h3 className="text-lg font-semibold text-[#4F46E5]">Assignments Due</h3>
-          <p className="text-2xl text-[#1F2937] mt-1">2</p>
-        </div>
-        <div className="bg-white p-4 rounded-2xl shadow-md">
-          <h3 className="text-lg font-semibold text-[#4F46E5]">Lectures Attended</h3>
-          <p className="text-2xl text-[#1F2937] mt-1">18</p>
-        </div>
-        <div className="bg-white p-4 rounded-2xl shadow-md">
-          <h3 className="text-lg font-semibold text-[#4F46E5]">Tasks Completed</h3>
-          <p className="text-2xl text-[#1F2937] mt-1">{todos.length}</p>
-        </div>
-      </div>
-        )
-        
-      }
+      )}
 
-      {
-        role ==='teacher' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-        <div className="bg-white p-4 rounded-2xl shadow-md">
-          <h3 className="text-lg font-semibold text-[#4F46E5]">Total Courses</h3>
-          <p className="text-2xl text-[#1F2937] mt-1">5</p>
+      {role === "teacher" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          <div className="bg-white p-4 rounded-2xl shadow-md">
+            <h3 className="text-lg font-semibold text-[#4F46E5]">
+              Total Courses
+            </h3>
+            <p className="text-2xl text-[#1F2937] mt-1">5</p>
+          </div>
+          <div className="bg-white p-4 rounded-2xl shadow-md">
+            <h3 className="text-lg font-semibold text-[#4F46E5]">
+              Total Assignments
+            </h3>
+            <p className="text-2xl text-[#1F2937] mt-1">3</p>
+          </div>
+          <div className="bg-white p-4 rounded-2xl shadow-md">
+            <h3 className="text-lg font-semibold text-[#4F46E5]">
+              Pending Reviews
+            </h3>
+            <p className="text-2xl text-[#1F2937] mt-1">4</p>
+          </div>
+          <div className="bg-white p-4 rounded-2xl shadow-md">
+            <h3 className="text-lg font-semibold text-[#4F46E5]">
+              Remaining Lectures
+            </h3>
+            <p className="text-2xl text-[#1F2937] mt-1">2</p>
+          </div>
         </div>
-        <div className="bg-white p-4 rounded-2xl shadow-md">
-          <h3 className="text-lg font-semibold text-[#4F46E5]">Total Assignments</h3>
-          <p className="text-2xl text-[#1F2937] mt-1">3</p>
-        </div>
-        <div className="bg-white p-4 rounded-2xl shadow-md">
-          <h3 className="text-lg font-semibold text-[#4F46E5]">Pending Reviews</h3>
-          <p className="text-2xl text-[#1F2937] mt-1">4</p>
-        </div>
-        <div className="bg-white p-4 rounded-2xl shadow-md">
-          <h3 className="text-lg font-semibold text-[#4F46E5]">Remaining Lectures</h3>
-          <p className="text-2xl text-[#1F2937] mt-1">2</p>
-        </div>
-      </div>
-        )
-      }
+      )}
       {/* Todo Section */}
       <section>
-        <h2 className="text-xl font-semibold text-[#4F46E5] mb-3">Your To-do List</h2>
+        <h2 className="text-xl font-semibold text-[#4F46E5] mb-3">
+          Your To-do List
+        </h2>
         <div className="flex items-center gap-3 mb-4">
           <input
             type="text"
@@ -207,7 +297,10 @@ export default function DashboardPage() {
         </div>
         <ul className="space-y-2">
           {todos?.map((todo) => (
-            <li key={todo.id} className="bg-white px-4 py-2 rounded-lg shadow flex items-center justify-between">
+            <li
+              key={todo.id}
+              className="bg-white px-4 py-2 rounded-lg shadow flex items-center justify-between"
+            >
               {editingId === todo.id ? (
                 <input
                   value={editText}
@@ -245,5 +338,5 @@ export default function DashboardPage() {
         </ul>
       </section>
     </div>
-  )
+  );
 }
