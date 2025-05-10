@@ -27,20 +27,39 @@ function ChatbotPage() {
   }, [user]);
 
   useEffect(() => {
-    const fetchCourses = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("courses")
-        .select("id, title");
-      if (error) {
-        alert("Error fetching courses");
-        return;
+  const fetchCourses = async () => {
+    setLoading(true);
+
+      const {data, error } = await supabase
+      .from("courses")
+      .select("id, title");
+
+    if (error) {
+      alert("Error fetching courses");
+    } else {
+      if(role ==='teacher'){
+        setCourses(data || []);
       }
-      setCourses(data);
-      setLoading(false);
-    };
-    if (userId) fetchCourses();
-  }, [userId]);
+      else{
+        const { data: enrolledCourses } = await supabase
+        .from("enrollments")
+        .select("course_id")
+        .eq("user_id", user.id);
+
+      const courseIds = enrolledCourses?.map((e) => e.course_id) || [];
+      
+      const enrolledCourseDetails = data?.filter(course => courseIds.includes(course.id)) || [];
+
+        setCourses(enrolledCourseDetails || []);
+      }
+    }
+
+    setLoading(false);
+  };
+
+  if (userId && role) fetchCourses();
+}, [userId, role]);
+
 
   useEffect(() => {
     if (!userId || !selectedCourseId) return;
