@@ -27,39 +27,38 @@ function ChatbotPage() {
   }, [user]);
 
   useEffect(() => {
-  const fetchCourses = async () => {
-    setLoading(true);
+    const fetchCourses = async () => {
+      setLoading(true);
 
-      const {data, error } = await supabase
-      .from("courses")
-      .select("id, title");
+      const { data, error } = await supabase
+        .from("courses")
+        .select("id, title");
 
-    if (error) {
-      alert("Error fetching courses");
-    } else {
-      if(role ==='teacher'){
-        setCourses(data || []);
+      if (error) {
+        alert("Error fetching courses");
+      } else {
+        if (role === "teacher") {
+          setCourses(data || []);
+        } else {
+          const { data: enrolledCourses } = await supabase
+            .from("enrollments")
+            .select("course_id")
+            .eq("user_id", user.id);
+
+          const courseIds = enrolledCourses?.map((e) => e.course_id) || [];
+
+          const enrolledCourseDetails =
+            data?.filter((course) => courseIds.includes(course.id)) || [];
+
+          setCourses(enrolledCourseDetails || []);
+        }
       }
-      else{
-        const { data: enrolledCourses } = await supabase
-        .from("enrollments")
-        .select("course_id")
-        .eq("user_id", user.id);
 
-      const courseIds = enrolledCourses?.map((e) => e.course_id) || [];
-      
-      const enrolledCourseDetails = data?.filter(course => courseIds.includes(course.id)) || [];
+      setLoading(false);
+    };
 
-        setCourses(enrolledCourseDetails || []);
-      }
-    }
-
-    setLoading(false);
-  };
-
-  if (userId && role) fetchCourses();
-}, [userId, role]);
-
+    if (userId && role) fetchCourses();
+  }, [userId, role]);
 
   useEffect(() => {
     if (!userId || !selectedCourseId) return;
@@ -130,10 +129,39 @@ function ChatbotPage() {
     fetchChat();
   }, [sessionId, selectedCourseId]);
 
-  const handleSend = async () => {
-    if (!message.trim() || !selectedCourseId || !apiKey) return;
+  const handleDelete = async () => {
+    if (!sessionId) return;
+    const { error: chatError } = await supabase
+      .from("bot_chat_history")
+      .delete()
 
-    setchatW(true); 
+      .eq("session_id", sessionId);
+    if (chatError) {
+      console.log(error);
+      return;
+    }
+    const { error } = await supabase
+      .from("chat_sessions")
+      .delete()
+      .eq("session_id", sessionId);
+    if (error) {
+      console.log(error);
+      return;
+    }
+    setSessions((prevSessions) =>
+      prevSessions.filter((session) => session.session_id !== sessionId)
+    );
+
+    handleNewSession();
+  };
+
+  const handleSend = async () => {
+    if (!message.trim() || !selectedCourseId) return;
+    // if (!apiKey) {
+    //   alert("No api found..");
+    //   return;
+    // }
+    setchatW(true);
 
     let newSessionId = sessionId;
     let newSessionName = activeSessionName;
@@ -190,7 +218,8 @@ function ChatbotPage() {
         if (response.status === 404 && data.error.includes("No vector DB")) {
           userFriendlyError =
             "The teacher hasn't uploaded any course material yet.";
-        } else if (
+        } 
+        else if (
           response.status === 400 &&
           data.error.includes("Missing required fields")
         ) {
@@ -237,7 +266,7 @@ function ChatbotPage() {
         message: error.message || "Error fetching response from backend.",
         session_id: newSessionId,
       };
-      setMessage(""); 
+      setMessage("");
       setchatW(false);
       await supabase.from("bot_chat_history").insert(botError);
       setHistory((prev) => [...prev, botError]);
@@ -358,6 +387,17 @@ function ChatbotPage() {
               disabled={chatW}
             >
               {chatW ? "Sending..." : "Send"}
+            </button>
+            <button
+              onClick={handleDelete}
+              className={`px-4 py-2 text-white rounded  ${
+                chatW
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[#F43F5E] hover:bg-[#E11D48]"
+              }`}
+              disabled={chatW}
+            >
+              Delete
             </button>
           </div>
         </>
