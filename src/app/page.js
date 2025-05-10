@@ -20,11 +20,10 @@ export default function Home() {
     let newScrollIndex =
       direction === "next" ? scrollIndex + 1 : scrollIndex - 1;
 
-    // Wrap around the scroll index
     if (newScrollIndex < 0) {
-      newScrollIndex = totalItems - 1; // Go to the last item
+      newScrollIndex = totalItems - 1; 
     } else if (newScrollIndex >= totalItems) {
-      newScrollIndex = 0; // Go back to the first item
+      newScrollIndex = 0;
     }
 
     setScrollIndex(newScrollIndex);
@@ -108,7 +107,6 @@ export default function Home() {
           </p>
           <a
             className="bg-[#4F46E5] hover:bg-[#4338ca] text-white font-semibold rounded-full px-6 py-3 w-max transition"
-            // type="button"
             href="/login"
           >
             Get Started
