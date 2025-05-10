@@ -2,54 +2,49 @@
 
 import { useState, useEffect } from "react";
 import { Pencil, Trash2, PlusCircle } from "lucide-react";
-import { supabase } from "@/app/lib/supabaseClient"; // Adjust the path to your supabaseClient
-import CourseCard from "@/app/components/CourseCard"; // Adjust the path to your CourseCard component
+import { supabase } from "@/app/lib/supabaseClient";
+import CourseCard from "@/app/components/CourseCard"; 
 import useUserSession from "@/app/lib/useUserSession";
 import { useRouter } from "next/navigation";
-<time datetime="2016-10-25" suppressHydrationWarning />;
-
 
 export default function CoursesPage() {
     
   const { user } = useUserSession({ redirectIfNoSession: true });
-  const [courses, setCourses] = useState([]); // Initialize with an empty array
+  const [courses, setCourses] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [newCourse, setNewCourse] = useState({
     title: "",
     description: "",
     teacher: "",
     thumbnail_url: "",
-    status: "draft", // Default status is 'draft'
+    status: "draft",
   });
-  const [teacherId, setTeacherId] = useState(null); // Store teacher's ID
+  const [teacherId, setTeacherId] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
     if (user && user.user_metadata?.role) {
       const role = user.user_metadata.sub;
       if(role){
-        setTeacherId(role); // Set teacherId based on user metadata
+        setTeacherId(role); 
       }
       else{
-        router.back(); // Redirect to the previous page if no role is found
+        router.back();
       }
     }
   }, [user, router]);
 
 
   useEffect(() => {
-    // Fetch courses from Supabase when the teacherId is set
     const fetchCourses = async () => {
       if (teacherId) {
-        // Fetch courses data
         const { data, error } = await supabase
           .from("courses")
           .select(
             "id, title, description, thumbnail_url, created_by, created_at, updated_at, status"
           )
-          .eq("created_by", teacherId); // Filter courses by the teacher's ID
+          .eq("created_by", teacherId); 
 
-        // Fetch teacher's name
         const { data: teacherData, error: teacherError } = await supabase
           .from("users")
           .select("name")
@@ -60,20 +55,18 @@ export default function CoursesPage() {
         } else if (teacherError) {
           console.log("Error fetching teacher data:", teacherError);
         } else {
-          // Merge teacher's name with each course
           const coursesWithTeacherName = data.map((course) => ({
             ...course,
-            teacher: teacherData[0]?.name || "Unknown Teacher", // Add the teacher's name to each course
+            teacher: teacherData[0]?.name || "Unknown Teacher",
           }));
 
-          // Set the courses with teacher names
           setCourses(coursesWithTeacherName);
         }
       }
     };
 
     fetchCourses();
-  }, [teacherId]); // Run the query whenever the teacherId changes
+  }, [teacherId]);
 
   const handleDelete = async (id) => {
     const { error } = await supabase.from("courses").delete().eq("id", id);
@@ -186,17 +179,6 @@ export default function CoursesPage() {
                 className="relative group bg-white shadow-lg rounded-lg overflow-hidden"
               >
                 <CourseCard course={course} />
-                {/* Badge for course status
-                <div
-                  className={`absolute top-4 left-4 px-2 py-1 text-white text-sm rounded-full ${
-                    course.status === "published"
-                      ? "bg-green-500"
-                      : "bg-yellow-500"
-                  }`}
-                >
-                  {course.status === "published" ? "Published" : "Drafted"}
-                </div> */}
-                {/* Badge for course status */}
                 <div
                   className={`absolute top-4 left-4 px-2 py-1 text-white text-sm rounded-full ${
                     course.status === "published"
@@ -235,7 +217,6 @@ export default function CoursesPage() {
         )}
       </section>
 
-      {/* Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <form

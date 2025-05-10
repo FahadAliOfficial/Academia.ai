@@ -11,6 +11,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [role, setRole] = useState("");
   <time datetime="2016-10-25" suppressHydrationWarning />;
+  const [liveClassNotification, setLiveClassNotification] = useState(null);
 
   useEffect(() => {
     if (user && user.user_metadata?.role) {
@@ -146,6 +147,15 @@ export default function DashboardPage() {
 
         const courseIds = enrolledCourses?.map((e) => e.course_id) || [];
 
+        const { data: liveClasses } = await supabase
+          .from("live_classes")
+          .select("title, course_id")
+          .in("course_id", courseIds)
+          .eq("is_active", true);
+
+        if (liveClasses && liveClasses.length > 0) {
+          setLiveClassNotification(liveClasses[0].title);
+        }
         const { data: assignments } = await supabase
           .from("assignments")
           .select("id")
@@ -208,6 +218,11 @@ export default function DashboardPage() {
       <h1 className="text-3xl font-bold text-[#1F2937] mb-6">
         Welcome, {userData.name} 🎓
       </h1>
+      {role === "student" && liveClassNotification && (
+        <div className="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-2xl shadow">
+          📢 <strong>Live Class Started:</strong> {liveClassNotification}
+        </div>
+      )}
 
       {role === "student" && (
         //student
@@ -251,7 +266,9 @@ export default function DashboardPage() {
             <h3 className="text-lg font-semibold text-[#4F46E5]">
               Total Courses
             </h3>
-            <p className="text-2xl text-[#1F2937] mt-1">{teacherStats.totalCourses}</p>
+            <p className="text-2xl text-[#1F2937] mt-1">
+              {teacherStats.totalCourses}
+            </p>
           </div>
           <div className="bg-white p-4 rounded-2xl shadow-md">
             <h3 className="text-lg font-semibold text-[#4F46E5]">
@@ -263,13 +280,17 @@ export default function DashboardPage() {
             <h3 className="text-lg font-semibold text-[#4F46E5]">
               Pending Reviews
             </h3>
-            <p className="text-2xl text-[#1F2937] mt-1">{teacherStats.pendingReviews}</p>
+            <p className="text-2xl text-[#1F2937] mt-1">
+              {teacherStats.pendingReviews}
+            </p>
           </div>
           <div className="bg-white p-4 rounded-2xl shadow-md">
             <h3 className="text-lg font-semibold text-[#4F46E5]">
               Remaining Lectures
             </h3>
-            <p className="text-2xl text-[#1F2937] mt-1">{teacherStats.remainingLectures}</p>
+            <p className="text-2xl text-[#1F2937] mt-1">
+              {teacherStats.remainingLectures}
+            </p>
           </div>
         </div>
       )}

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Pencil, Trash2, PlusCircle } from "lucide-react";
-import { supabase } from "@/app/lib/supabaseClient"; // Adjust the path to your supabaseClient
-import CourseCard from "@/app/components/CourseCard"; // Adjust the path to your CourseCard component
+// import { Pencil, Trash2, PlusCircle } from "lucide-react";
+import { supabase } from "@/app/lib/supabaseClient";
+import CourseCard from "@/app/components/CourseCard";
 import useUserSession from "@/app/lib/useUserSession";
 import { useRouter } from "next/navigation";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
@@ -11,7 +11,7 @@ import LoadingSpinner from "@/app/components/LoadingSpinner";
 
 export default function CoursesPage() {
   const { user } = useUserSession({ redirectIfNoSession: true });
-  const [courses, setCourses] = useState([]); // Initialize with an empty array
+  const [courses, setCourses] = useState([]);
   const [userID, setuserID] = useState([]);
   const [allCourse, setAllCourses] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -20,31 +20,33 @@ export default function CoursesPage() {
 
   useEffect(() => {
     if (user && user.id) {
-        setuserID(user.id);
+      setuserID(user.id);
     }
   }, [user]);
 
   const [enrollmentRequests, setEnrollmentRequests] = useState([]);
 
-  // And fetch them (example logic)
   useEffect(() => {
-    if(!userID) return;
+    if (!userID) return;
     const fetchRequests = async () => {
       if (!userID) return console.log("No user!");
 
       setLoading(true);
 
       const { data, error } = await supabase
-        .from("enrollment_requests") // adjust the table name
+        .from("enrollment_requests")
         .select("course_id")
         .eq("student_id", userID);
-        setLoading(false);
+      setLoading(false);
       if (!data || data.length === 0) {
-          console.log("No enrollment requests found.");
-          return;
-       }
+        console.log("No enrollment requests found.");
+        return;
+      }
       if (error) {
-        console.error("Error fetching enrollment requests:", error.message|| error);
+        console.error(
+          "Error fetching enrollment requests:",
+          error.message || error
+        );
         return;
       }
 
@@ -55,61 +57,57 @@ export default function CoursesPage() {
   }, [userID]);
 
   useEffect(() => {
-    if(!userID) return;
+    if (!userID) return;
 
     const fetchCourses = async () => {
       if (!userID || typeof userID !== "string" || userID.trim() === "") return;
       setLoading(true);
-      // Fetch all courses first
+
       const { data: allCourses, error: allCoursesError } = await supabase
         .from("courses")
         .select(
           "title, description, thumbnail_url, created_by, created_at, updated_at, id"
         )
         .eq("status", "published");
-  
+
       if (allCoursesError) {
         console.error("Error fetching all courses:", allCoursesError);
         return;
       }
-  
-      // Fetch the enrolled courses for the current user
+
       const { data: enrollments, error: enrollmentError } = await supabase
         .from("enrollments")
         .select("course_id")
         .eq("user_id", userID);
-  
+
       if (enrollmentError) {
         console.error("Error fetching enrollments:", enrollmentError);
         return;
       }
-  
+
       const courseIDs = enrollments.map((e) => e.course_id);
-  
-      // Split all courses into enrolled and unenrolled
+
       const enrolledCourses = allCourses.filter((course) =>
         courseIDs.includes(course.id)
       );
       const unenrolledCourses = allCourses.filter(
         (course) => !courseIDs.includes(course.id)
       );
-  
-      // Get teacher names for both enrolled and unenrolled courses
+
       const teacherIDs = [
         ...new Set(allCourses.map((course) => course.created_by)),
       ];
-  
+
       const { data: teacherProfiles, error: teacherError } = await supabase
         .from("users")
         .select("id, name")
         .in("id", teacherIDs);
-  
+
       if (teacherError) {
         console.error("Error fetching teachers:", teacherError);
         return;
       }
-  
-      // Merge teacher data with courses
+
       const mergeTeacherData = (courses) => {
         return courses.map((course) => {
           const teacherName =
@@ -121,16 +119,15 @@ export default function CoursesPage() {
           };
         });
       };
-  
-      // Set both the enrolled and unenrolled courses
+
       setCourses(mergeTeacherData(enrolledCourses));
       setAllCourses(mergeTeacherData(unenrolledCourses));
       setLoading(false);
     };
-  
+
     fetchCourses();
   }, [userID]);
-  
+
   const handleRequestEnrollment = async (courseId) => {
     const { error } = await supabase
       .from("enrollment_requests")
@@ -159,7 +156,7 @@ export default function CoursesPage() {
     setEnrollmentRequests(enrollmentRequests.filter((id) => id !== courseId));
   };
 
-  if(loading) return <LoadingSpinner />
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="p-6 bg-[#F9FAFB] min-h-screen overflow-y-auto">

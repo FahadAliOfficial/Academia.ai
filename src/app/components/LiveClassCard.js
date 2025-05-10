@@ -1,28 +1,42 @@
-'use client' // Ensure this runs only on the client side
+'use client'
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Video } from "lucide-react";
-import { useRouter } from "next/navigation"; // Using `next/navigation` in Next.js 13+ for app routing
+import { useRouter } from "next/navigation";
+import { supabase } from "@/app/lib/supabaseClient";
+import useUserSession from "@/app/lib/useUserSession";
 
 const LiveClassCard = ({ liveClass }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
-
-  // Handle opening the modal
+  const { user } = useUserSession({ redirectIfNoSession: true });
+  const [userRole, setRole] = useState([])
+  useEffect(() => {
+    if (user && user.user_metadata?.role) {
+      setRole(user.user_metadata.role.toLowerCase());
+    }
+  }, [user]);
   const handleJoinClass = () => {
     setIsModalOpen(true);
   };
 
-  // Handle closing the modal
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
 
-  // Handle joining the class
-  const handleJoin = () => {
-    setIsModalOpen(false); // Close the modal
-    localStorage.setItem("liveClassData", JSON.stringify(liveClass)); // Store class data in localStorage
-    router.push(`/dashboard/LiveClass/join/${liveClass.meeting_link}`); // Navigate to the class room
+  const handleJoin = async () => {
+    if(!user) return;
+    if(userRole === 'teacher'){
+      const { data, error } = await supabase
+      .from('live_classes')
+      .update({ is_active: 'true' }) 
+      .eq('id', liveClass.id);
+      if(error) console.log("Error while updating the Class live: ", error);
+    }
+    setIsModalOpen(false);
+    
+    localStorage.setItem("liveClassData", JSON.stringify(liveClass)); 
+    router.push(`/dashboard/LiveClass/join/${liveClass.meeting_link}`);
   };
 
   return (
@@ -38,7 +52,6 @@ const LiveClassCard = ({ liveClass }) => {
         <Video size={18} /> Join Class
       </button>
 
-      {/* Modal for class call */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-2xl shadow-lg w-[90%] max-w-lg space-y-4">
@@ -48,9 +61,6 @@ const LiveClassCard = ({ liveClass }) => {
             </p>
             <p className="text-sm text-gray-600">Meeting Link:</p>
             <a
-              // href={}
-              // target="_blank"
-              // rel="noopener noreferrer"
               className="text-blue-600 hover:underline"
             >
               {liveClass.meeting_link}

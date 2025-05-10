@@ -3,11 +3,14 @@
 import { use,useEffect, useRef, useState } from "react";
 import socket from "@/socket";
 import { Video, VideoOff, Mic, MicOff, LogOut } from "lucide-react";
+import { supabase } from "@/app/lib/supabaseClient";
+import useUserSession from "@/app/lib/useUserSession";
 
 export default function JoinClass({ params }) {
   const { roomId } = use(params);  
   const participantName = "User"; 
   <time datetime="2016-10-25" suppressHydrationWarning />
+  const { user } = useUserSession({ redirectIfNoSession: true });
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
@@ -18,6 +21,12 @@ export default function JoinClass({ params }) {
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [participants, setParticipants] = useState([]);
   const [remoteStreamAvailable, setRemoteStreamAvailable] = useState(false);
+  const [userRole, setRole] = useState([])
+  useEffect(() => {
+    if (user && user.user_metadata?.role) {
+      setRole(user.user_metadata.role.toLowerCase());
+    }
+  }, [user]);
 
   useEffect(() => {
     const pc = new RTCPeerConnection({
@@ -117,8 +126,18 @@ export default function JoinClass({ params }) {
     }
   };
 
-  const handleLeave = () => {
+  const handleLeave = async() => {
+    const live =  localStorage.getItem("liveClassData");
+    const parsedData = JSON.parse(live);
+    if(userRole === 'teacher'){
+      const { data, error } = await supabase
+      .from('live_classes')
+      .update({ is_active: 'false' }) 
+      .eq('id', parsedData.id);
+      if(error) console.log("Error while updating the Class live: ", error);
+    }
     socket.emit("leave-room", roomId);
+
     window.location.href = "/dashboard/LiveClass";
   };
 

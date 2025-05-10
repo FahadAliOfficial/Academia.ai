@@ -18,7 +18,7 @@ const LiveClasses = () => {
     course_id: "",
     scheduled_at: "",
     meeting_link: "",
-    is_active: true,
+    is_active: false,
   });
 
   useEffect(() => {
@@ -110,7 +110,7 @@ useEffect(() => {
         course_id: "",
         scheduled_at: "",
         meeting_link: "",
-        is_active: true,
+        is_active: false,
       });
       setShowForm(false);
     } else {
@@ -140,7 +140,7 @@ if (loading) return <LoadingSpinner />;
       ) : (
         <div className="space-y-4">
           {liveClasses
-            .filter((cls) => userRole !== "student" || cls.is_active)
+            .filter((cls) => userRole !== "student" || cls)
             .map((cls) => (
               <div
                 key={cls.id}
@@ -210,14 +210,14 @@ if (loading) return <LoadingSpinner />;
               required
             />
 
-            <div className="flex items-center space-x-2">
+            {/* <div className="flex items-center space-x-2">
               <input
                 type="checkbox"
                 checked={newClass.is_active}
                 onChange={(e) => setNewClass({ ...newClass, is_active: e.target.checked })}
               />
               <label className="text-gray-700">Active</label>
-            </div>
+            </div> */}
 
             <div className="flex justify-between">
               <button
