@@ -18,6 +18,9 @@
     --foreground: #ededed;
   }
 }
+[data-nextjs-dev-overlay] {
+  display: none !important;
+}
 html {
   scroll-behavior: smooth;
 }

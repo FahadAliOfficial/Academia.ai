@@ -306,39 +306,40 @@ const CourseMaterials = ({ id }) => {
         </div>
       )}
       {vectorModalOpen && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div className="bg-white p-6 rounded-xl w-[90%] max-w-md text-center shadow-lg space-y-4">
-      {vectorStatus === "loading" ? (
-        <>
-          <p className="text-[#4F46E5] text-xl font-semibold">Processing...</p>
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#4F46E5] mx-auto"></div>
-          <p className="text-gray-600">{vectorMessage}</p>
-        </>
-      ) : (
-        <>
-          <p
-            className={`text-xl font-semibold ${
-              vectorStatus === "success" ? "text-green-600" : "text-red-500"
-            }`}
-          >
-            {vectorMessage}
-          </p>
-          <button
-            className="bg-[#4F46E5] text-white px-4 py-2 rounded hover:bg-[#4338ca]"
-            onClick={() => setVectorModalOpen(false)}
-          >
-            Close
-          </button>
-        </>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl w-[90%] max-w-md text-center shadow-lg space-y-4">
+            {vectorStatus === "loading" ? (
+              <>
+                <p className="text-[#4F46E5] text-xl font-semibold">
+                  Processing...
+                </p>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#4F46E5] mx-auto"></div>
+                <p className="text-gray-600">{vectorMessage}</p>
+              </>
+            ) : (
+              <>
+                <p
+                  className={`text-xl font-semibold ${
+                    vectorStatus === "success"
+                      ? "text-green-600"
+                      : "text-red-500"
+                  }`}
+                >
+                  {vectorMessage}
+                </p>
+                <button
+                  className="bg-[#4F46E5] text-white px-4 py-2 rounded hover:bg-[#4338ca]"
+                  onClick={() => setVectorModalOpen(false)}
+                >
+                  Close
+                </button>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
-  </div>
-)}
-
-    </div>
-    
   );
-  
 };
 
 export default CourseMaterials;

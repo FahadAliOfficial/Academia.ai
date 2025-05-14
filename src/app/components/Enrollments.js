@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { supabase } from "@/app/lib/supabaseClient";
-import useUserSession from "../lib/useUserSession";
+import useUserSession from "@/app/lib/useUserSession";
 
 const Enrollments = ({ id }) => {
   const { user } = useUserSession({ redirectIfNoSession: true });
@@ -8,6 +8,11 @@ const Enrollments = ({ id }) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState(null);
+  const [file, setFile] = useState(null); // ✅ File upload state
+  const [vectorModalOpen, setVectorModalOpen] = useState(false);
+  const [vectorStatus, setVectorStatus] = useState("loading"); // 'loading', 'success', 'error'
+  const [vectorMessage, setVectorMessage] = useState("Starting upload...");
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (user && user.user_metadata?.role) {
@@ -22,12 +27,14 @@ const Enrollments = ({ id }) => {
     // ✅ Fetch enrolled students
     const { data: enrolledData, error: enrolledError } = await supabase
       .from("enrollments")
-      .select(`
+      .select(
+        `
         id,
         enrolled_at,
         courses (id, title),
         users (id, name)
-      `)
+      `
+      )
       .eq("course_id", id);
 
     if (enrolledError) {
@@ -46,12 +53,14 @@ const Enrollments = ({ id }) => {
     if (role === "teacher") {
       const { data: requestData, error: requestError } = await supabase
         .from("enrollment_requests")
-        .select(`
+        .select(
+          `
           id,
           requested_at,
           students:student_id (id, name),
           courses:course_id (id, created_by, title)
-        `)
+        `
+        )
         .eq("course_id", id)
         .eq("status", "pending");
 
@@ -131,11 +140,92 @@ const Enrollments = ({ id }) => {
       console.error("Error rejecting request:", error);
     }
   };
+  //  ✅ File upload logic
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
 
+  const handleFileUpload = async () => {
+    if (!file) {
+      alert("Please select a file first.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("course_id", id);
+
+    // Open modal and show loading
+    setVectorModalOpen(true);
+    setVectorStatus("loading");
+    setVectorMessage("Uploading and registering students...");
+
+    try {
+      const response = await fetch("http://127.0.0.1:5000/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        setVectorStatus("success");
+        setVectorMessage("Students successfully registered.");
+
+        setFile(null); // Clear state
+        fileInputRef.current.value = ""; // Clear input field
+        fetchData();
+      } else {
+        setVectorStatus("error");
+        setVectorMessage(result.error || "Upload failed.");
+      }
+    } catch (error) {
+      setVectorStatus("error");
+      setVectorMessage("Something went wrong. Please try again.");
+    }
+  };
   return (
     <div className="p-6 bg-white shadow-md rounded-xl">
       <h2 className="text-xl font-semibold mb-4 text-[#4F46E5]">Enrollments</h2>
+      {/* ✅ File Upload Section */}
+      {role === "teacher" && (
+        <div className="mb-6 space-y-4">
+          <label
+            htmlFor="fileUpload"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Upload Students File (CSV or Excel)
+          </label>
 
+          <input
+            id="fileUpload"
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".csv, .xlsx, .xls"
+            className="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
+
+          <button
+            onClick={handleFileUpload}
+            className="inline-flex items-center gap-2 bg-blue-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 12v9m0 0l-3-3m3 3l3-3m0-12a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+            Upload File
+          </button>
+        </div>
+      )}
       {loading ? (
         <p className="text-[#4F46E5]">Loading data...</p>
       ) : (
@@ -227,6 +317,39 @@ const Enrollments = ({ id }) => {
             </>
           )}
         </>
+      )}
+      {role === "teacher" && vectorModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl w-[90%] max-w-md text-center shadow-lg space-y-4 animate-fadeIn">
+            {vectorStatus === "loading" ? (
+              <>
+                <p className="text-[#4F46E5] text-xl font-semibold">
+                  Processing...
+                </p>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#4F46E5] mx-auto"></div>
+                <p className="text-gray-600">{vectorMessage}</p>
+              </>
+            ) : (
+              <>
+                <p
+                  className={`text-xl font-semibold ${
+                    vectorStatus === "success"
+                      ? "text-green-600"
+                      : "text-red-500"
+                  }`}
+                >
+                  {vectorMessage}
+                </p>
+                <button
+                  className="bg-[#4F46E5] text-white px-4 py-2 rounded hover:bg-[#4338ca]"
+                  onClick={() => setVectorModalOpen(false)}
+                >
+                  Close
+                </button>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

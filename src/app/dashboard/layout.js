@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 // import Navbar from '../components/Navbar'
 
 export default function TeacherDashboardLayout({ children}) {
-      const { user, loading } = useUserSession({ redirectIfNoSession: true });
+    const { user, loading } = useUserSession({ redirectIfNoSession: true });
     const [role, setRole] = useState([]);
     useEffect(() => {
         if (user && user.user_metadata?.role) {
@@ -17,6 +17,7 @@ export default function TeacherDashboardLayout({ children}) {
           // router.push(`/dashboard/${role}`);
         }
       }, [user]);
+      console.log('user', user);
   return (
     <div className="flex h-screen">
          {/* {showSidebar && <SidebarTeacher />} */}

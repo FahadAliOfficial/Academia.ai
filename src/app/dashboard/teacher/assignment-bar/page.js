@@ -113,7 +113,7 @@ export default function TeacherDashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] p-8">
+    <div className="min-h-screen bg-[#F9FAFB] p-8 overflow-auto">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold text-[#1F2937] mb-6">
           Assignment Dashboard
