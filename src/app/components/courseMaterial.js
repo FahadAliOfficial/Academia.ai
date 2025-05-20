@@ -218,7 +218,7 @@ const CourseMaterials = ({ id }) => {
       </div>
 
       {loading ? (
-        <p>Loading materials...</p>
+        <p className="text-black">Loading materials...</p>
       ) : materials.length === 0 ? (
         <p className="text-[#4F46E5]">No course materials uploaded yet.</p>
       ) : (

@@ -17,7 +17,6 @@ export default function TeacherDashboardLayout({ children}) {
           // router.push(`/dashboard/${role}`);
         }
       }, [user]);
-      console.log('user', user);
   return (
     <div className="flex h-screen">
          {/* {showSidebar && <SidebarTeacher />} */}

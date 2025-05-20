@@ -39,10 +39,10 @@ export default function Home() {
     <main className="font-sans bg-[#F9FAFB] text-[#1F2937] ">
       <header
         id="main-header"
-        className="absolute top-2 left-0 w-full  z-[999]"
+        className="absolute top-2 left-0 w-full z-[999]"
       >
         <div className="max-w-6xl mx-auto px-4 py-1 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-xl sm:text-2xl font-bold">
             <span className="text-[#4F46E5]">Academia</span>.ai
           </h1>
           <nav className="hidden md:flex text-gray-700 space-x-6 font-medium">
@@ -62,58 +62,86 @@ export default function Home() {
               Contact
             </a>
           </nav>
+          <button className="md:hidden text-[#4F46E5]" onClick={() => document.getElementById('mobile-menu')?.classList.toggle('hidden')}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
 
-         <div>
+         <div className="flex items-center">
   <a
     href="/login"
-    className="bg-white mr-4 text-[#1F2937] border border-[#4F46E5] px-6 py-2 rounded-lg hover:bg-gray-100"
+    className="bg-white mr-2 sm:mr-4 text-[#1F2937] border border-[#4F46E5] px-3 sm:px-6 py-2 rounded-lg hover:bg-gray-100 text-xs sm:text-sm"
   >
     Sign in
   </a>
   <a
     href="/register"
-    className="bg-[#4F46E5] hover:bg-[#4338ca] text-white px-6 py-2 rounded-lg transition-colors"
+    className="bg-[#4F46E5] hover:bg-[#4338ca] text-white px-3 sm:px-6 py-2 rounded-lg transition-colors text-xs sm:text-sm"
   >
     Sign Up
   </a>
 </div>
 
         </div>
+
+        {/* Mobile Menu */}
+        <div id="mobile-menu" className="hidden md:hidden bg-white absolute top-full left-0 w-full py-4 px-6 shadow-lg z-50">
+          <nav className="flex flex-col space-y-4 text-gray-700 font-medium">
+            <a href="#home" className="hover:text-[#4F46E5]">
+              Home
+            </a>
+            <a href="#about" className="hover:text-[#4F46E5]">
+              About
+            </a>
+            <a href="#courses" className="hover:text-[#4F46E5]">
+              Courses
+            </a>
+            <a href="#testimonials" className="hover:text-[#4F46E5]">
+              Testimonials
+            </a>
+            <a href="#contact" className="hover:text-[#4F46E5]">
+              Contact
+            </a>
+          </nav>
+        </div>
       </header>
 
-      <div className="max-w-7xl mb-10 mx-auto px-6 min-h-screen flex flex-col lg:flex-row items-center justify-center gap-10 pt-24">
-        <section id="home" className="max-w-sm flex flex-col gap-6">
-          <div className="flex items-center gap-1">
-            <Star className="text-yellow-400 text-lg" />
-            <Star className="text-yellow-400 text-lg" />
-            <Star className="text-yellow-400 text-lg" />
-            <Star className="text-yellow-400 text-lg" />
-            <Star className="text-yellow-400 text-lg" />
+      <div className="max-w-7xl mb-10 mx-auto px-4 sm:px-6 min-h-screen flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-10 pt-20 sm:pt-24">
+        <section id="home" className="max-w-full sm:max-w-sm flex flex-col gap-4 sm:gap-6 text-center lg:text-left">
+          <div className="flex items-center justify-center lg:justify-start gap-1">
+            <Star className="text-yellow-400 text-sm sm:text-lg" />
+            <Star className="text-yellow-400 text-sm sm:text-lg" />
+            <Star className="text-yellow-400 text-sm sm:text-lg" />
+            <Star className="text-yellow-400 text-sm sm:text-lg" />
+            <Star className="text-yellow-400 text-sm sm:text-lg" />
           </div>
-          <p className="text-sm font-semibold text-slate-800">
+          <p className="text-xs sm:text-sm font-semibold text-slate-800">
             Trusted by
             <span className="font-bold"> 8,000+ </span>
             students around the world
           </p>
 
-          <h1 className="text-slate-800 font-extrabold text-4xl sm:text-5xl leading-tight">
+          <h1 className="text-slate-800 font-extrabold text-3xl sm:text-4xl md:text-5xl leading-tight">
             Learn without limits and spread knowledge.
           </h1>
 
-          <p className="text-slate-600 text-base sm:text-md max-w-md">
+          <p className="text-slate-600 text-sm sm:text-base max-w-md mx-auto lg:mx-0">
             Are you looking for high-quality online courses, you have come to
             the right place! So, put away your worries and start learning with
             Training Tale.
           </p>
-          <a
-            className="bg-[#4F46E5] hover:bg-[#4338ca] text-white font-semibold rounded-full px-6 py-3 w-max transition"
-            href="/login"
-          >
-            Get Started
-          </a>
+          <div className="flex justify-center lg:justify-start">
+            <a
+              className="bg-[#4F46E5] hover:bg-[#4338ca] text-white font-semibold rounded-full px-4 sm:px-6 py-2 sm:py-3 w-max transition text-sm sm:text-base"
+              href="/login"
+            >
+              Get Started
+            </a>
+          </div>
         </section>
-        <section className="flex flex-wrap justify-center lg:justify-start gap-6 max-w-sm">
-          <div className="bg-blue-600 rounded-xl overflow-hidden max-w-[140px] sm:max-w-[160px] md:max-w-[180px]">
+        <section className="flex flex-wrap justify-center lg:justify-start gap-3 sm:gap-6 max-w-full sm:max-w-sm mt-6 sm:mt-0">
+          <div className="bg-blue-600 rounded-xl overflow-hidden max-w-[120px] sm:max-w-[140px] md:max-w-[160px] w-[120px] h-[120px] sm:w-auto sm:h-auto">
             <img
               alt="Young woman in yellow jacket holding folder and making OK gesture, on blue background"
               className="w-full h-full object-cover"
@@ -122,7 +150,7 @@ export default function Home() {
               width="180"
             />
           </div>
-          <div className="bg-orange-500 rounded-xl overflow-hidden max-w-[140px] sm:max-w-[160px] md:max-w-[180px]">
+          <div className="bg-orange-500 rounded-xl overflow-hidden max-w-[120px] sm:max-w-[140px] md:max-w-[160px] w-[120px] h-[120px] sm:w-auto sm:h-auto">
             <img
               alt="Young man with curly hair wearing headphones and holding books giving thumbs up, on orange background"
               className="w-full h-full object-cover"
@@ -131,7 +159,7 @@ export default function Home() {
               width="180"
             />
           </div>
-          <div className="bg-yellow-400 rounded-xl overflow-hidden max-w-[140px] sm:max-w-[160px] md:max-w-[180px]">
+          <div className="bg-yellow-400 rounded-xl overflow-hidden max-w-[120px] sm:max-w-[140px] md:max-w-[160px] w-[120px] h-[120px] sm:w-auto sm:h-auto">
             <img
               alt="Young woman with short hair wearing glasses reading a book, on yellow background"
               className="w-full h-full object-cover"
@@ -140,7 +168,7 @@ export default function Home() {
               width="180"
             />
           </div>
-          <div className="bg-teal-800 rounded-xl overflow-hidden max-w-[140px] sm:max-w-[160px] md:max-w-[180px]">
+          <div className="bg-teal-800 rounded-xl overflow-hidden max-w-[120px] sm:max-w-[140px] md:max-w-[160px] w-[120px] h-[120px] sm:w-auto sm:h-auto">
             <img
               alt="Smiling man with headphones and backpack holding a tablet, on teal background"
               className="w-full h-full object-cover"
@@ -149,7 +177,7 @@ export default function Home() {
               width="180"
             />
           </div>
-          <div className="bg-blue-600 rounded-xl overflow-hidden max-w-[140px] sm:max-w-[160px] md:max-w-[180px]"></div>
+          <div className="bg-blue-600 rounded-xl overflow-hidden max-w-[120px] sm:max-w-[140px] md:max-w-[160px] hidden sm:block"></div>
         </section>
       </div>
 

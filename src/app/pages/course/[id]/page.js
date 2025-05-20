@@ -28,7 +28,6 @@ return (
       {activeTab === 'enrollments' && <Enrollments id={id}/>}
       {activeTab === 'assignments' && <Assignments id={id} />}
       {activeTab === 'material' && <CourseMaterials id={id} />}
-      {}
     </div>
   </div>
 )

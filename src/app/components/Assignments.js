@@ -156,17 +156,19 @@ const Assignments = ({ id, teacherId }) => {
     <div className="assignments-container bg-white shadow-lg p-6 rounded-lg">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-[#4F46E5]">Assignments</h2>
-        <button
+        {userRole === "teacher" && (
+          <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 bg-[#4F46E5] text-white px-4 py-2 rounded hover:bg-[#4338ca] transition"
+          className="flex items-center cursor-pointer gap-2 bg-[#4F46E5] text-white px-4 py-2 rounded hover:bg-[#4338ca] transition"
         >
           <PlusCircle size={20} />
           Add Assignment
         </button>
+        )}
       </div>
 
       {loading ? (
-        <p>Loading assignments...</p>
+        <p className="text-black">Loading assignments...</p>
       ) : assignments.length === 0 ? (
         <p className="text-[#4F46E5]">No assignments yet.</p>
       ) : (

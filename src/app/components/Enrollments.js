@@ -139,12 +139,31 @@ const Enrollments = ({ id }) => {
     } else {
       console.error("Error rejecting request:", error);
     }
-  };
-  //  ✅ File upload logic
+  };  //  ✅ File upload logic
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const selectedFile = e.target.files[0];
+    
+    if (selectedFile) {
+      // Check file type
+      const validTypes = ['.csv', '.xlsx', '.xls'];
+      const fileExtension = selectedFile.name.substring(selectedFile.name.lastIndexOf('.')).toLowerCase();
+      
+      if (!validTypes.includes(fileExtension)) {
+        alert("Please select a valid CSV or Excel file");
+        e.target.value = '';
+        return;
+      }
+      
+      // Check file size (limit to 5MB)
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        alert("File is too large. Maximum size is 5MB.");
+        e.target.value = '';
+        return;
+      }
+    }
+    
+    setFile(selectedFile);
   };
-
   const handleFileUpload = async () => {
     if (!file) {
       alert("Please select a file first.");
@@ -168,8 +187,22 @@ const Enrollments = ({ id }) => {
 
       const result = await response.json();
       if (response.ok) {
+        // Process results to create a summary
+        const newUsers = result.results.filter(r => r.status.includes("new user")).length;
+        const existingUsers = result.results.filter(r => r.status.includes("existing user")).length;
+        const skippedUsers = result.results.filter(r => r.status.includes("already enrolled")).length;
+        const errorUsers = result.results.filter(r => r.status.includes("error")).length;
+        
+        const summary = `
+          Registration complete:
+          • ${newUsers} new students created and enrolled
+          • ${existingUsers} existing students enrolled
+          • ${skippedUsers} students skipped (already enrolled)
+          ${errorUsers > 0 ? `• ${errorUsers} errors occurred` : ''}
+        `;
+        
         setVectorStatus("success");
-        setVectorMessage("Students successfully registered.");
+        setVectorMessage(summary);
 
         setFile(null); // Clear state
         fileInputRef.current.value = ""; // Clear input field
@@ -179,6 +212,7 @@ const Enrollments = ({ id }) => {
         setVectorMessage(result.error || "Upload failed.");
       }
     } catch (error) {
+      console.error("File upload error:", error);
       setVectorStatus("error");
       setVectorMessage("Something went wrong. Please try again.");
     }
@@ -194,16 +228,19 @@ const Enrollments = ({ id }) => {
             className="block text-sm font-medium text-gray-700"
           >
             Upload Students File (CSV or Excel)
-          </label>
-
-          <input
-            id="fileUpload"
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept=".csv, .xlsx, .xls"
-            className="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-          />
+          </label>          <div className="space-y-2">
+            <input
+              id="fileUpload"
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".csv, .xlsx, .xls"
+              className="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+            <div className="text-xs text-gray-500">
+              File should have columns: STUDENT-ID, NAME, EMAIL
+            </div>
+          </div>
 
           <button
             onClick={handleFileUpload}
@@ -317,8 +354,7 @@ const Enrollments = ({ id }) => {
             </>
           )}
         </>
-      )}
-      {role === "teacher" && vectorModalOpen && (
+      )}      {role === "teacher" && vectorModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl w-[90%] max-w-md text-center shadow-lg space-y-4 animate-fadeIn">
             {vectorStatus === "loading" ? (
@@ -331,17 +367,22 @@ const Enrollments = ({ id }) => {
               </>
             ) : (
               <>
-                <p
-                  className={`text-xl font-semibold ${
+                <div
+                  className={`${
                     vectorStatus === "success"
                       ? "text-green-600"
                       : "text-red-500"
                   }`}
                 >
-                  {vectorMessage}
-                </p>
+                  <h3 className="text-xl font-semibold mb-4">
+                    {vectorStatus === "success" ? "Upload Complete" : "Upload Failed"}
+                  </h3>
+                  <div className="whitespace-pre-line text-left text-gray-700">
+                    {vectorMessage}
+                  </div>
+                </div>
                 <button
-                  className="bg-[#4F46E5] text-white px-4 py-2 rounded hover:bg-[#4338ca]"
+                  className="bg-[#4F46E5] text-white mt-4 px-4 py-2 rounded hover:bg-[#4338ca]"
                   onClick={() => setVectorModalOpen(false)}
                 >
                   Close
