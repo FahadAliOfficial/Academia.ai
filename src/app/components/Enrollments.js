@@ -139,29 +139,31 @@ const Enrollments = ({ id }) => {
     } else {
       console.error("Error rejecting request:", error);
     }
-  };  //  ✅ File upload logic
+  }; //  ✅ File upload logic
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    
+
     if (selectedFile) {
       // Check file type
-      const validTypes = ['.csv', '.xlsx', '.xls'];
-      const fileExtension = selectedFile.name.substring(selectedFile.name.lastIndexOf('.')).toLowerCase();
-      
+      const validTypes = [".csv", ".xlsx", ".xls"];
+      const fileExtension = selectedFile.name
+        .substring(selectedFile.name.lastIndexOf("."))
+        .toLowerCase();
+
       if (!validTypes.includes(fileExtension)) {
         alert("Please select a valid CSV or Excel file");
-        e.target.value = '';
+        e.target.value = "";
         return;
       }
-      
+
       // Check file size (limit to 5MB)
       if (selectedFile.size > 5 * 1024 * 1024) {
         alert("File is too large. Maximum size is 5MB.");
-        e.target.value = '';
+        e.target.value = "";
         return;
       }
     }
-    
+
     setFile(selectedFile);
   };
   const handleFileUpload = async () => {
@@ -188,19 +190,27 @@ const Enrollments = ({ id }) => {
       const result = await response.json();
       if (response.ok) {
         // Process results to create a summary
-        const newUsers = result.results.filter(r => r.status.includes("new user")).length;
-        const existingUsers = result.results.filter(r => r.status.includes("existing user")).length;
-        const skippedUsers = result.results.filter(r => r.status.includes("already enrolled")).length;
-        const errorUsers = result.results.filter(r => r.status.includes("error")).length;
-        
+        const newUsers = result.results.filter((r) =>
+          r.status.includes("new user")
+        ).length;
+        const existingUsers = result.results.filter((r) =>
+          r.status.includes("existing user")
+        ).length;
+        const skippedUsers = result.results.filter((r) =>
+          r.status.includes("already enrolled")
+        ).length;
+        const errorUsers = result.results.filter((r) =>
+          r.status.includes("error")
+        ).length;
+
         const summary = `
           Registration complete:
           • ${newUsers} new students created and enrolled
           • ${existingUsers} existing students enrolled
           • ${skippedUsers} students skipped (already enrolled)
-          ${errorUsers > 0 ? `• ${errorUsers} errors occurred` : ''}
+          ${errorUsers > 0 ? `• ${errorUsers} errors occurred` : ""}
         `;
-        
+
         setVectorStatus("success");
         setVectorMessage(summary);
 
@@ -228,7 +238,8 @@ const Enrollments = ({ id }) => {
             className="block text-sm font-medium text-gray-700"
           >
             Upload Students File (CSV or Excel)
-          </label>          <div className="space-y-2">
+          </label>{" "}
+          <div className="space-y-2">
             <input
               id="fileUpload"
               type="file"
@@ -241,7 +252,6 @@ const Enrollments = ({ id }) => {
               File should have columns: STUDENT-ID, NAME, EMAIL
             </div>
           </div>
-
           <button
             onClick={handleFileUpload}
             className="inline-flex items-center gap-2 bg-blue-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -354,9 +364,10 @@ const Enrollments = ({ id }) => {
             </>
           )}
         </>
-      )}      {role === "teacher" && vectorModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl w-[90%] max-w-md text-center shadow-lg space-y-4 animate-fadeIn">
+      )}{" "}
+      {role === "teacher" && vectorModalOpen && (
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md transition-opacity duration-300 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl w-[90%] max-w-md text-center shadow-2xl space-y-4 animate-fadeIn">
             {vectorStatus === "loading" ? (
               <>
                 <p className="text-[#4F46E5] text-xl font-semibold">
@@ -375,7 +386,9 @@ const Enrollments = ({ id }) => {
                   }`}
                 >
                   <h3 className="text-xl font-semibold mb-4">
-                    {vectorStatus === "success" ? "Upload Complete" : "Upload Failed"}
+                    {vectorStatus === "success"
+                      ? "Upload Complete"
+                      : "Upload Failed"}
                   </h3>
                   <div className="whitespace-pre-line text-left text-gray-700">
                     {vectorMessage}

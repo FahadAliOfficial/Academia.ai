@@ -252,7 +252,8 @@ const CourseMaterials = ({ id }) => {
       )}
 
       {showForm && userRole === "teacher" && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-50 transition-opacity duration-300">
           <form
             onSubmit={handleSubmit}
             className="bg-white p-6 rounded-2xl shadow-lg w-[90%] max-w-md space-y-4"
@@ -306,8 +307,9 @@ const CourseMaterials = ({ id }) => {
         </div>
       )}
       {vectorModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl w-[90%] max-w-md text-center shadow-lg space-y-4">
+
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-50 transition-opacity duration-300">
+          <div className="bg-white p-6 rounded-xl w-[90%] max-w-md text-center shadow-2xl space-y-4">
             {vectorStatus === "loading" ? (
               <>
                 <p className="text-[#4F46E5] text-xl font-semibold">

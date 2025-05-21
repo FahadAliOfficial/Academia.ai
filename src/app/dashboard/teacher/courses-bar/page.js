@@ -218,10 +218,11 @@ export default function CoursesPage() {
       </section>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-50 transition-opacity duration-300">
           <form
             onSubmit={handleSubmit}
-            className="bg-white p-6 rounded-2xl shadow-lg w-[90%] max-w-md space-y-4"
+            className="bg-white p-6 rounded-2xl shadow-2xl w-[90%] max-w-md space-y-4"
           >
             <h2 className="text-2xl font-bold text-[#1F2937]">
               {newCourse.id ? "Edit Course" : "Add New Course"}

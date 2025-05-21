@@ -819,7 +819,7 @@ const QuestionUpload = () => {
       <div className="mt-4"></div>
       {/* Chapter Name Modal */}
       {chapterModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center transition-opacity duration-300 z-50">
           <div className="bg-white p-6 rounded-xl w-[90%] max-w-md text-center shadow-lg space-y-4 animate-fadeIn">
             <h3 className="text-xl font-semibold text-[#4F46E5]">
               Enter Chapter Information
@@ -1342,8 +1342,8 @@ const QuestionUpload = () => {
       )}
       {/* Loading/Success Modal */}
       {vectorModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl w-[90%] max-w-md text-center shadow-lg space-y-4 animate-fadeIn">
+        <div className="fixed inset-0  bg-white/30 backdrop-blur-md flex items-center justify-center z-50 transition-opacity duration-300">
+          <div className="bg-white p-6 rounded-xl w-[90%] max-w-md text-center shadow-2xl space-y-4 animate-fadeIn">
             {vectorStatus === "loading" ? (
               <>
                 <p className="text-[#4F46E5] text-xl font-semibold">

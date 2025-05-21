@@ -53,8 +53,8 @@ const LiveClassCard = ({ liveClass }) => {
       </button>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-lg w-[90%] max-w-lg space-y-4">
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-md transition-opacity duration-300 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl w-[90%] max-w-lg space-y-4">
             <h2 className="text-2xl font-bold text-[#1F2937]">{liveClass.title}</h2>
             <p className="text-sm text-gray-500">
               Scheduled: {new Date(liveClass.scheduled_at).toLocaleString()}
