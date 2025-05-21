@@ -27,8 +27,7 @@ const QuestionUpload = () => {
   const [showQuestionEditor, setShowQuestionEditor] = useState(false);
   const [chapterModalOpen, setChapterModalOpen] = useState(false);
   const [currentExamId, setCurrentExamId] = useState(null);
-  const [existingChapters, setExistingChapters] = useState([]);
-  const [newQuestion, setNewQuestion] = useState({
+  const [existingChapters, setExistingChapters] = useState([]);  const [newQuestion, setNewQuestion] = useState({
     type: "mcq",
     question: "",
     answer: "",
@@ -38,6 +37,8 @@ const QuestionUpload = () => {
     buggy: "",
     fix: "",
   });
+  const [editingQuestionIndex, setEditingQuestionIndex] = useState(-1);
+  const [isEditing, setIsEditing] = useState(false);
   const [totalChapters, setTotalChapters] = useState(0);
   const [chapterNumber, setChapterNumber] = useState("");
   const router = useRouter();
@@ -47,8 +48,7 @@ const QuestionUpload = () => {
     { length: totalChapters },
     (_, index) => index + 1
   );
-  
-  const addNewQuestion = () => {
+    const addNewQuestion = () => {
     if (!newQuestion.question || !newQuestion.answer) {
       alert("Please fill out both question and answer fields.");
       return;
@@ -77,7 +77,19 @@ const QuestionUpload = () => {
       return;
     }
 
-    setParsedQuestions([...parsedQuestions, questionToAdd]);
+    if (isEditing && editingQuestionIndex !== -1) {
+      // Update existing question
+      const updatedQuestions = [...parsedQuestions];
+      updatedQuestions[editingQuestionIndex] = questionToAdd;
+      setParsedQuestions(updatedQuestions);
+      
+      // Reset editing state
+      setIsEditing(false);
+      setEditingQuestionIndex(-1);
+    } else {
+      // Add new question
+      setParsedQuestions([...parsedQuestions, questionToAdd]);
+    }
     
     // Reset the form for the next question
     setNewQuestion({
@@ -91,11 +103,33 @@ const QuestionUpload = () => {
       fix: "",
     });
   };
-
   const deleteQuestion = (index) => {
     const updatedQuestions = [...parsedQuestions];
     updatedQuestions.splice(index, 1);
     setParsedQuestions(updatedQuestions);
+  };
+  const editQuestion = (index) => {
+    setEditingQuestionIndex(index);
+    setIsEditing(true);
+    
+    // Load the question data into the form
+    const questionToEdit = parsedQuestions[index];
+    setNewQuestion({
+      ...questionToEdit,
+      // Ensure all necessary fields are present
+      options: questionToEdit.options || { A: "", B: "", C: "", D: "" },
+      code: questionToEdit.code || "",
+      buggy: questionToEdit.buggy || "",
+      fix: questionToEdit.fix || "",
+    });
+    
+    // Scroll to the edit form more safely
+    setTimeout(() => {
+      const formElement = document.getElementById("questionFormSection");
+      if (formElement) {
+        formElement.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 300); // Increased timeout to ensure the DOM is ready
   };
 
   const startWithoutFile = () => {
@@ -908,16 +942,24 @@ const QuestionUpload = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {parsedQuestions.map((q, index) => (
-                    <div key={index} className="p-4 border rounded-lg shadow hover:shadow-md">
+                  {parsedQuestions.map((q, index) => (                    <div key={index} className="p-4 border rounded-lg shadow hover:shadow-md">
                       <div className="flex justify-between">
-                        <h4 className="font-medium text-gray-800">Q{index + 1}: {q.type.toUpperCase()}</h4>
-                        <button
-                          onClick={() => deleteQuestion(index)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <X size={16} />
-                        </button>
+                        <h4 className="font-medium text-gray-800">Q{index + 1}: {q.type.toUpperCase()}</h4>                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => editQuestion(index)}
+                            className="text-blue-500 hover:text-blue-700 bg-blue-50 p-1 rounded"
+                            title="Edit question"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => deleteQuestion(index)}
+                            className="text-red-500 hover:text-red-700 bg-red-50 p-1 rounded"
+                            title="Delete question"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
                       </div>
                       <p className="mt-2 text-gray-700">{q.question}</p>
                       
@@ -960,13 +1002,16 @@ const QuestionUpload = () => {
                   ))}
                 </div>
               )}
-            </div>
-
-            {/* Add New Question Form */}
-            <div className="bg-gray-50 p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold text-[#4F46E5] mb-4">
-                Add New Question
+            </div>            {/* Add New Question Form */}
+            <div id="questionFormSection" className={`p-6 rounded-lg border ${isEditing ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'}`}>              <h3 className="text-lg font-semibold text-[#4F46E5] mb-4">
+                {isEditing ? `Edit Question #${editingQuestionIndex + 1}` : "Add New Question"}
               </h3>
+              
+              {isEditing && (
+                <div className="mb-4 p-2 bg-blue-100 text-blue-800 rounded">
+                  <p className="text-sm">You are currently editing question #{editingQuestionIndex + 1}. Make your changes and click "Update Question" when done.</p>
+                </div>
+              )}
               
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1170,14 +1215,35 @@ const QuestionUpload = () => {
                     </div>
                   </div>
                 )}
-                
-                <div className="pt-2">
+                  <div className="pt-2 flex gap-2">
                   <button
                     onClick={addNewQuestion}
                     className="bg-[#4F46E5] text-white px-4 py-2 rounded hover:bg-[#4338ca] transition"
                   >
-                    <PlusCircle size={18} className="inline mr-2" /> Add Question
+                    <PlusCircle size={18} className="inline mr-2" /> {isEditing ? "Update Question" : "Add Question"}
                   </button>
+                  
+                  {isEditing && (
+                    <button
+                      onClick={() => {
+                        setIsEditing(false);
+                        setEditingQuestionIndex(-1);
+                        setNewQuestion({
+                          type: "mcq",
+                          question: "",
+                          answer: "",
+                          max_score: 1,
+                          options: { A: "", B: "", C: "", D: "" },
+                          code: "",
+                          buggy: "",
+                          fix: "",
+                        });
+                      }}
+                      className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
+                    >
+                      Cancel Editing
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
