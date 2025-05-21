@@ -381,12 +381,11 @@ function ExamPortal() {
           <p className="text-gray-500">
             No live exams are available right now.
           </p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        ) : (          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {availableExams.map((exam) => (
               <div
                 key={exam.id}
-                className="relative p-6 border rounded-lg shadow hover:shadow-md transition"
+                className="relative p-6 border rounded-lg shadow hover:shadow-md transition flex flex-col h-full"
               >
                 {/* Live Badge */}
                 <div className="absolute top-4 right-4">
@@ -394,22 +393,24 @@ function ExamPortal() {
                     Available
                   </span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                  {exam.title}
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  {exam.description || "No description"}
-                </p>
-                {exam.chapter_name && (
-                  <p className="text-sm text-gray-500 mb-3">
-                    Chapter: {exam.chapter_name}{" "}
-                    {exam.chapter && `(Chapter ${exam.chapter})`}
+                <div className="flex-grow overflow-hidden">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2 overflow-hidden text-ellipsis line-clamp-2 max-h-[3rem]">
+                    {exam.title}
+                  </h3>
+                  <p className="text-gray-600 mb-4 overflow-hidden text-ellipsis line-clamp-2 max-h-[3rem]">
+                    {exam.description || "No description"}
                   </p>
-                )}
-                <p className="text-sm text-gray-500 mb-3">
-                  Course: {exam.courseName}
-                </p>
-                <Link href={`../../../pages/exam/${exam.id}`}>
+                  {exam.chapter_name && (
+                    <p className="text-sm text-gray-500 mb-3 truncate">
+                      Chapter: {exam.chapter_name}{" "}
+                      {exam.chapter && `(Chapter ${exam.chapter})`}
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-500 mb-3 truncate">
+                    Course: {exam.courseName}
+                  </p>
+                </div>
+                <Link href={`../../../pages/exam/${exam.id}`} className="w-full">
                   <button className="mt-2 w-full cursor-pointer bg-[#4F46E5] text-white px-4 py-2 rounded hover:bg-[#4338ca] transition">
                     Start Exam
                   </button>
@@ -512,12 +513,12 @@ function ExamPortal() {
                 Clear filters
               </button>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          ) : (     
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 overflow-auto">
               {filteredCompletedExams.map((result) => (
                 <div
                   key={result.id}
-                  className="relative p-6 border rounded-lg shadow hover:shadow-md transition"
+                  className="relative p-6 border rounded-lg shadow hover:shadow-md transition flex flex-col h-[300px]"
                 >
                   {/* Result Badge */}
                   <div className="absolute top-4 right-4">
@@ -533,46 +534,50 @@ function ExamPortal() {
                       {result.score}%
                     </span>
                   </div>
+                  
+                  <div className="flex-grow overflow-hidden">                    <h3 className="text-xl font-semibold text-gray-800 mb-2 overflow-hidden text-ellipsis line-clamp-2 max-h-[3rem]">
+                      {result.title}
+                    </h3>
 
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                    {result.title}
-                  </h3>
-
-                  <p className="text-gray-600 mb-3">
-                    {result.description || "No description"}
-                  </p>
-
-                  {/* Course and Chapter info */}
-                  {result.chapterName && (
-                    <p className="text-sm text-gray-500 mb-1">
-                      Chapter: {result.chapterName}{" "}
-                      {result.chapter && `(Chapter ${result.chapter})`}
+                    <p className="text-gray-600 mb-3 overflow-hidden text-ellipsis line-clamp-2 h-12 max-h-[3rem]">
+                      {result.description || "No description"}
                     </p>
-                  )}
-                  <p className="text-sm text-gray-500 mb-3">
-                    Course: {result.courseName}
-                  </p>
 
-                  <div className="mt-4 mb-3 bg-gray-100 rounded-full h-2.5">
-                    <div
-                      className={`h-2.5 rounded-full ${
-                        result.score >= 70
-                          ? "bg-green-500"
-                          : result.score >= 50
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
-                      }`}
-                      style={{ width: `${result.score}%` }}
-                    ></div>
+                    {/* Course and Chapter info */}
+                    <div className="mt-2">
+                      {result.chapterName && (
+                        <p className="text-sm text-gray-500 mb-1 truncate">
+                          Chapter: {result.chapterName}{" "}
+                          {result.chapter && `(Chapter ${result.chapter})`}
+                        </p>
+                      )}
+                      <p className="text-sm text-gray-500 mb-3 truncate">
+                        Course: {result.title}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 mb-3 bg-gray-100 rounded-full h-2.5">
+                      <div
+                        className={`h-2.5 rounded-full ${
+                          result.score >= 70
+                            ? "bg-green-500"
+                            : result.score >= 50
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
+                        }`}
+                        style={{ width: `${result.score}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-sm mt-2">
+                      <span className="text-gray-500">
+                        Score: {result.obtained}/{result.totalMarks}
+                      </span>
+                      <span className="text-gray-500">
+                        {result.completedDate}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-sm mt-2">
-                    <span className="text-gray-500">
-                      Score: {result.obtained}/{result.totalMarks}
-                    </span>
-                    <span className="text-gray-500">
-                      {result.completedDate}
-                    </span>
-                  </div>
+                  
                   <button
                     onClick={async () => {
                       // Set selected exam and open modal
@@ -645,7 +650,7 @@ function ExamPortal() {
                         setModalOpen(true);
                       }
                     }}
-                    className="mt-4 w-full cursor-pointer bg-[#4F46E5] text-white px-4 py-2 rounded hover:bg-[#4338ca] transition flex items-center justify-center"
+                    className="mt-auto w-full cursor-pointer bg-[#4F46E5] text-white px-4 py-2 rounded hover:bg-[#4338ca] transition flex items-center justify-center"
                   >
                     <span>View Question Details</span>
                     <svg

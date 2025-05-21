@@ -628,12 +628,11 @@ const QuestionUpload = () => {
           <p className="text-gray-500">
             No files uploaded yet for this course and question type.
           </p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        ) : (          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {uploadedFiles.map((file) => (
               <div
                 key={file.id}
-                className="relative p-4 border rounded-lg shadow hover:shadow-md"
+                className="relative p-4 border rounded-lg shadow hover:shadow-md flex flex-col h-full"
               >
                 {/* Live/Offline Badge */}
                 <div className="absolute top-2 right-2">
@@ -647,25 +646,27 @@ const QuestionUpload = () => {
                     </span>
                   )}
                 </div>
-                <FileText className="text-[#4F46E5] mb-2" />
-                <p className="font-semibold text-gray-800">
-                  {file.title || file.source_file}
-                </p>
-                <p className="text-sm text-gray-600 mb-1">
-                  {file.description || "No description"}
-                </p>
-                {/* Display chapter name and number if available */}
-                {file.chapter_name && (
-                  <p className="text-xs font-medium text-indigo-800 bg-indigo-100 inline-block px-2 py-1 rounded mb-2">
-                    {file.chapter_name} {file.chapter && `(Chapter ${file.chapter})`}
+                <div className="flex-grow overflow-hidden">
+                  <FileText className="text-[#4F46E5] mb-2" />
+                  <p className="font-semibold text-gray-800 overflow-hidden text-ellipsis">
+                    {file.title || file.source_file}
                   </p>
-                )}
-                {!file.chapter_name && file.chapter && (
-                  <p className="text-xs font-medium text-indigo-800 bg-indigo-100 inline-block px-2 py-1 rounded mb-2">
-                    Chapter {file.chapter}
+                  <p className="text-sm text-gray-600 mb-1 overflow-hidden text-ellipsis line-clamp-2">
+                    {file.description || "No description"}
                   </p>
-                )}
-                <div className="flex flex-wrap gap-2">
+                  {/* Display chapter name and number if available */}
+                  {file.chapter_name && (
+                    <p className="text-xs font-medium text-indigo-800 bg-indigo-100 inline-block px-2 py-1 rounded mb-2">
+                      {file.chapter_name} {file.chapter && `(Chapter ${file.chapter})`}
+                    </p>
+                  )}
+                  {!file.chapter_name && file.chapter && (
+                    <p className="text-xs font-medium text-indigo-800 bg-indigo-100 inline-block px-2 py-1 rounded mb-2">
+                      Chapter {file.chapter}
+                    </p>
+                  )}
+                </div>
+                <div className="mt-auto pt-3 flex flex-wrap gap-2">
                   <button
                     onClick={() => {
                       // Load the exam data for editing
