@@ -275,7 +275,7 @@ export default function ExamDashboard() {  const [examData, setExamData] = useSt
             </p>
           </div>
         )}
-        
+
         {/* Results Section */}
         {examData.length > 0 ? (
           examData.map((exam) => (
