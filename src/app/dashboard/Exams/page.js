@@ -1,10 +1,18 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/app/lib/supabaseClient";
-import { Upload, FileText, BarChartBig, PlusCircle, Edit, X, Save } from "lucide-react";
+import {
+  Upload,
+  FileText,
+  BarChartBig,
+  PlusCircle,
+  Edit,
+  X,
+  Save,
+} from "lucide-react";
 import useUserSession from "@/app/lib/useUserSession";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import ProtectedPage from "@/app/components/ProtectedPage";
 
 const QuestionUpload = () => {
@@ -27,7 +35,8 @@ const QuestionUpload = () => {
   const [showQuestionEditor, setShowQuestionEditor] = useState(false);
   const [chapterModalOpen, setChapterModalOpen] = useState(false);
   const [currentExamId, setCurrentExamId] = useState(null);
-  const [existingChapters, setExistingChapters] = useState([]);  const [newQuestion, setNewQuestion] = useState({
+  const [existingChapters, setExistingChapters] = useState([]);
+  const [newQuestion, setNewQuestion] = useState({
     type: "mcq",
     question: "",
     answer: "",
@@ -42,13 +51,13 @@ const QuestionUpload = () => {
   const [totalChapters, setTotalChapters] = useState(0);
   const [chapterNumber, setChapterNumber] = useState("");
   const router = useRouter();
-  
+
   // Generate chapters array based on totalChapters
   const chapters = Array.from(
     { length: totalChapters },
     (_, index) => index + 1
   );
-    const addNewQuestion = () => {
+  const addNewQuestion = () => {
     if (!newQuestion.question || !newQuestion.answer) {
       alert("Please fill out both question and answer fields.");
       return;
@@ -59,7 +68,9 @@ const QuestionUpload = () => {
     // Validate based on question type
     if (questionToAdd.type === "mcq") {
       // Ensure at least two options are provided for MCQ
-      const filledOptions = Object.values(questionToAdd.options).filter(opt => opt.trim());
+      const filledOptions = Object.values(questionToAdd.options).filter((opt) =>
+        opt.trim()
+      );
       if (filledOptions.length < 2) {
         alert("MCQ questions must have at least two options.");
         return;
@@ -72,7 +83,10 @@ const QuestionUpload = () => {
     } else if (questionToAdd.type === "coding" && !questionToAdd.code) {
       alert("Coding questions must include starter code.");
       return;
-    } else if (questionToAdd.type === "code_error" && (!questionToAdd.buggy || !questionToAdd.fix)) {
+    } else if (
+      questionToAdd.type === "code_error" &&
+      (!questionToAdd.buggy || !questionToAdd.fix)
+    ) {
       alert("Code error questions must include both buggy and fixed code.");
       return;
     }
@@ -82,7 +96,7 @@ const QuestionUpload = () => {
       const updatedQuestions = [...parsedQuestions];
       updatedQuestions[editingQuestionIndex] = questionToAdd;
       setParsedQuestions(updatedQuestions);
-      
+
       // Reset editing state
       setIsEditing(false);
       setEditingQuestionIndex(-1);
@@ -90,7 +104,7 @@ const QuestionUpload = () => {
       // Add new question
       setParsedQuestions([...parsedQuestions, questionToAdd]);
     }
-    
+
     // Reset the form for the next question
     setNewQuestion({
       type: "mcq",
@@ -111,7 +125,7 @@ const QuestionUpload = () => {
   const editQuestion = (index) => {
     setEditingQuestionIndex(index);
     setIsEditing(true);
-    
+
     // Load the question data into the form
     const questionToEdit = parsedQuestions[index];
     setNewQuestion({
@@ -122,7 +136,7 @@ const QuestionUpload = () => {
       buggy: questionToEdit.buggy || "",
       fix: questionToEdit.fix || "",
     });
-    
+
     // Scroll to the edit form more safely
     setTimeout(() => {
       const formElement = document.getElementById("questionFormSection");
@@ -141,24 +155,24 @@ const QuestionUpload = () => {
     setCurrentExamId(null);
     setChapterModalOpen(true);
   };
-  
+
   // Function to fetch exam questions for editing
   const fetchExamQuestions = async (examId) => {
     setVectorModalOpen(true);
     setVectorStatus("loading");
     setVectorMessage("Loading exam questions...");
-    
+
     try {
       // Fetch questions for this exam
       const { data: questions, error: questionsError } = await supabase
         .from("questions")
         .select("*")
         .eq("exam_id", examId);
-        
+
       if (questionsError) throw questionsError;
-      
+
       const loadedQuestions = [];
-      
+
       // Process each question
       for (const q of questions) {
         const baseQuestion = {
@@ -166,96 +180,92 @@ const QuestionUpload = () => {
           type: q.type,
           question: q.question,
           answer: "",
-          max_score: q.max_score
+          max_score: q.max_score,
         };
-        
+
         if (q.type.toLowerCase() === "mcq") {
           const { data: options } = await supabase
             .from("mcq_options")
             .select("*")
             .eq("question_id", q.id);
-            
+
           if (options) {
             const formattedOptions = {};
             let correctAnswer = "";
-            
-            options.forEach(opt => {
+
+            options.forEach((opt) => {
               formattedOptions[opt.label] = opt.text;
               if (opt.is_correct) correctAnswer = opt.label;
             });
-            
+
             loadedQuestions.push({
               ...baseQuestion,
               options: formattedOptions,
-              answer: correctAnswer
+              answer: correctAnswer,
             });
           }
-        } 
-        else if (q.type.toLowerCase() === "fill_blank") {
+        } else if (q.type.toLowerCase() === "fill_blank") {
           const { data: details } = await supabase
             .from("fill_blanks")
             .select("*")
             .eq("question_id", q.id)
             .single();
-            
+
           if (details) {
             loadedQuestions.push({
               ...baseQuestion,
-              answer: details.answer
+              answer: details.answer,
             });
           }
-        }
-        else if (q.type.toLowerCase() === "short_answer") {
+        } else if (q.type.toLowerCase() === "short_answer") {
           const { data: details } = await supabase
             .from("short_answers")
             .select("*")
             .eq("question_id", q.id)
             .single();
-            
+
           if (details) {
             loadedQuestions.push({
               ...baseQuestion,
-              answer: details.answer
+              answer: details.answer,
             });
           }
-        }
-        else if (q.type.toLowerCase() === "coding") {
+        } else if (q.type.toLowerCase() === "coding") {
           const { data: details } = await supabase
             .from("coding_questions")
             .select("*")
             .eq("question_id", q.id)
             .single();
-            
+
           if (details) {
             loadedQuestions.push({
               ...baseQuestion,
               code: details.code,
-              answer: ""
+              answer: "",
             });
           }
-        }
-        else if (q.type.toLowerCase() === "code_error") {
+        } else if (q.type.toLowerCase() === "code_error") {
           const { data: details } = await supabase
             .from("code_errors")
             .select("*")
             .eq("question_id", q.id)
             .single();
-            
+
           if (details) {
             loadedQuestions.push({
               ...baseQuestion,
               buggy: details.buggy_code,
               fix: details.fix_code,
-              answer: ""
+              answer: "",
             });
           }
         }
       }
-      
+
       setParsedQuestions(loadedQuestions);
       setCurrentExamId(examId);
       setShowQuestionEditor(true);
-      
+
       setVectorModalOpen(false);
     } catch (err) {
       console.error("Error loading exam questions:", err);
@@ -278,41 +288,44 @@ const QuestionUpload = () => {
           .select("*")
           .eq("course_id", courseId)
           .eq("type", questionType.toLowerCase());
-        
+
         // Add chapter filter if a chapter is selected
         if (chapterNumber && chapterNumber !== "") {
           query = query.eq("chapter", parseInt(chapterNumber));
         }
-        
+
         const { data: uploadedData, error: uploadedError } = await query;
         setUploadedFiles(!uploadedError ? uploadedData || [] : []);
-        
+
         // Fetch existing chapters for this course
         const { data: chaptersData, error: chaptersError } = await supabase
           .from("exams")
           .select("chapter_name, chapter")
           .eq("course_id", courseId)
           .not("chapter_name", "is", null);
-          
+
         if (!chaptersError && chaptersData) {
           // Create a unique list of chapters
           const uniqueChapters = chaptersData.reduce((acc, item) => {
-            if (item.chapter_name && !acc.some(ch => ch.name === item.chapter_name)) {
-              acc.push({ 
-                name: item.chapter_name, 
-                number: item.chapter 
+            if (
+              item.chapter_name &&
+              !acc.some((ch) => ch.name === item.chapter_name)
+            ) {
+              acc.push({
+                name: item.chapter_name,
+                number: item.chapter,
               });
             }
             return acc;
           }, []);
-          
+
           setExistingChapters(uniqueChapters);
-          
+
           // Find the highest chapter number for default total chapters
           if (uniqueChapters.length > 0) {
-            const highestChapter = Math.max(...uniqueChapters
-              .filter(ch => ch.number)
-              .map(ch => ch.number));
+            const highestChapter = Math.max(
+              ...uniqueChapters.filter((ch) => ch.number).map((ch) => ch.number)
+            );
             if (highestChapter > 0) {
               setTotalChapters(highestChapter);
             }
@@ -322,7 +335,8 @@ const QuestionUpload = () => {
         setUploadedFiles([]);
         setExistingChapters([]);
       }
-      setLoading(false);    };
+      setLoading(false);
+    };
 
     fetchData();
   }, [courseId, questionType, chapterNumber]);
@@ -345,12 +359,12 @@ const QuestionUpload = () => {
       });
 
       if (!response.ok) throw new Error("Parsing service failed.");
-        const { title, description, questions } = await response.json();
-      
+      const { title, description, questions } = await response.json();
+
       setParsedTitle(title);
       setParsedDescription(description);
       setParsedQuestions(questions);
-      
+
       setVectorModalOpen(false);
       setChapterModalOpen(true);
     } catch (err) {
@@ -363,28 +377,34 @@ const QuestionUpload = () => {
 
   const handleSaveExam = async () => {
     if (!courseId || !parsedQuestions.length || !chapterName) {
-      alert("Missing required information. Please ensure course, questions, and chapter name are provided.");
+      alert(
+        "Missing required information. Please ensure course, questions, and chapter name are provided."
+      );
       return;
     }
-    
+
     setVectorModalOpen(true);
     setVectorStatus("loading");
-    setVectorMessage(currentExamId ? "Updating exam..." : "Saving exam questions...");
-    
+    setVectorMessage(
+      currentExamId ? "Updating exam..." : "Saving exam questions..."
+    );
+
     try {
       // Generate a source file name or use the uploaded file name
-      const sourceFileName = file ? file.name : `${chapterName.replace(/\s+/g, '_')}_manual_exam.txt`;
-      
+      const sourceFileName = file
+        ? file.name
+        : `${chapterName.replace(/\s+/g, "_")}_manual_exam.txt`;
+
       // If there's a file, upload it to storage for future reference
       let filePath = null;
       if (file) {
         const timestamp = new Date().getTime();
         filePath = `exams/${courseId}/${timestamp}_${sourceFileName}`;
-        
+
         const { error: storageError } = await supabase.storage
-          .from('exam-files')
+          .from("exam-files")
           .upload(filePath, file);
-          
+
         if (storageError) {
           console.error("Error uploading file:", storageError);
           // Continue even if file upload fails - we still need to create the exam record
@@ -392,7 +412,7 @@ const QuestionUpload = () => {
       }
 
       let examId;
-      
+
       if (currentExamId) {
         // Update existing exam
         const { data: examData, error: examError } = await supabase
@@ -406,29 +426,31 @@ const QuestionUpload = () => {
           })
           .eq("id", currentExamId)
           .select();
-          
-        if (examError) throw new Error("Failed to update exam: " + examError?.message);
+
+        if (examError)
+          throw new Error("Failed to update exam: " + examError?.message);
         examId = currentExamId;
-        
+
         // Delete existing questions (we'll recreate them)
         await supabase.from("questions").delete().eq("exam_id", examId);
-        
       } else {
         // Insert a new exam
         const { data: examData, error: examError } = await supabase
           .from("exams")
-          .insert([{
-            course_id: courseId,
-            title: parsedTitle || `${chapterName} Exam`,
-            description: parsedDescription || `Exam for ${chapterName}`,
-            type: questionType.toLowerCase(),
-            chapter_name: chapterName,
-            chapter: chapterNumber ? parseInt(chapterNumber) : null,
-            source_file: sourceFileName, // Add source file name to satisfy the not-null constraint
-            // file_path: filePath // Store the actual storage path if a file was uploaded
-          }])
+          .insert([
+            {
+              course_id: courseId,
+              title: parsedTitle || `${chapterName} Exam`,
+              description: parsedDescription || `Exam for ${chapterName}`,
+              type: questionType.toLowerCase(),
+              chapter_name: chapterName,
+              chapter: chapterNumber ? parseInt(chapterNumber) : null,
+              source_file: sourceFileName, // Add source file name to satisfy the not-null constraint
+              // file_path: filePath // Store the actual storage path if a file was uploaded
+            },
+          ])
           .select();
-          
+
         if (examError || !examData || examData.length === 0) {
           throw new Error("Failed to create exam: " + examError?.message);
         }
@@ -495,22 +517,22 @@ const QuestionUpload = () => {
             break;
         }
       }
-        // Refresh the uploaded files list
+      // Refresh the uploaded files list
       let query = supabase
         .from("exams")
         .select("*")
         .eq("course_id", courseId)
         .eq("type", questionType.toLowerCase());
-      
+
       // Add chapter filter if selected
       if (chapterNumber) {
         query = query.eq("chapter", parseInt(chapterNumber));
       }
-      
+
       const { data: updatedUploads } = await query;
-      
+
       setUploadedFiles(updatedUploads || []);
-      
+
       // Reset the form
       setFile(null);
       setParsedQuestions([]);
@@ -521,7 +543,7 @@ const QuestionUpload = () => {
 
       setVectorStatus("success");
       setVectorMessage("Exam saved successfully!");
-      
+
       // Close the modal after a short delay to show success message
       setTimeout(() => {
         setVectorModalOpen(false);
@@ -530,7 +552,7 @@ const QuestionUpload = () => {
       console.error("Error saving exam:", err);
       setVectorStatus("error");
       setVectorMessage(`Failed to save exam: ${err.message}`);
-      
+
       // Keep modal open a bit longer if there's an error
       setTimeout(() => {
         setVectorModalOpen(false);
@@ -545,7 +567,6 @@ const QuestionUpload = () => {
       <h2 className="text-2xl font-bold text-[#4F46E5] mb-6">
         Upload Questions
       </h2>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <select
           className="border border-gray-300 rounded-md p-2 text-black"
@@ -575,9 +596,11 @@ const QuestionUpload = () => {
             </option>
           ))}
         </select>
-      </div>      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      </div>{" "}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="flex flex-col">
-          <select            className="border border-gray-300 rounded-md p-2 text-black w-full"
+          <select
+            className="border border-gray-300 rounded-md p-2 text-black w-full"
             value={chapterNumber}
             onChange={(e) => {
               setChapterNumber(e.target.value);
@@ -594,18 +617,21 @@ const QuestionUpload = () => {
               </option>
             ))}
           </select>
-          
+
           {existingChapters.length > 0 && (
             <div className="mt-2">
-              <p className="text-sm text-gray-500 mb-1">Existing chapters in this course:</p>
+              <p className="text-sm text-gray-500 mb-1">
+                Existing chapters in this course:
+              </p>
               <div className="flex flex-wrap gap-2">
                 {existingChapters.map((chapter, idx) => (
-                  <span 
+                  <span
                     key={idx}
                     className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full cursor-pointer hover:bg-blue-200"
                     onClick={() => {
                       setChapterName(chapter.name);
-                      if(chapter.number) setChapterNumber(chapter.number.toString());
+                      if (chapter.number)
+                        setChapterNumber(chapter.number.toString());
                     }}
                   >
                     {chapter.name} {chapter.number && `(Ch. ${chapter.number})`}
@@ -615,7 +641,7 @@ const QuestionUpload = () => {
             </div>
           )}
         </div>
-        
+
         <div className="flex items-start">
           <input
             type="file"
@@ -624,32 +650,31 @@ const QuestionUpload = () => {
           />
         </div>
       </div>
-
       <div className="flex justify-between">
         <button
           onClick={startWithoutFile}
           className="cursor-pointer bg-gray-200 text-[#4F46E5] px-4 py-2 rounded hover:bg-gray-300 transition"
         >
-          <PlusCircle size={18} className="inline mr-2" /> Create exam without file
+          <PlusCircle size={18} className="inline mr-2" /> Create exam without
+          file
         </button>
         <div className="flex justify-center">
           <button
-          onClick={handleUpload}
-          className="mt-4 cursor-pointer mr-2 bg-[#4F46E5] text-white px-4 py-2 rounded hover:bg-[#4338ca] transition"
-        >
-          <Upload size={18} className="inline mr-2" /> Upload
-        </button>
-        <button
-          onClick={() => {
-            router.push('./Exams/exam-details');
-          }}
-          className="mt-4 cursor-pointer bg-[#4F46E5] text-white px-4 py-2 rounded hover:bg-[#4338ca] transition"
-        >
-          <BarChartBig size={18} className="inline mr-2" /> Results
-        </button>
-          </div>
+            onClick={handleUpload}
+            className="mt-4 cursor-pointer mr-2 bg-[#4F46E5] text-white px-4 py-2 rounded hover:bg-[#4338ca] transition"
+          >
+            <Upload size={18} className="inline mr-2" /> Upload
+          </button>
+          <button
+            onClick={() => {
+              router.push("./Exams/exam-details");
+            }}
+            className="mt-4 cursor-pointer bg-[#4F46E5] text-white px-4 py-2 rounded hover:bg-[#4338ca] transition"
+          >
+            <BarChartBig size={18} className="inline mr-2" /> Results
+          </button>
+        </div>
       </div>
-
       <div className="mt-8">
         <h3 className="text-lg font-semibold mb-2 text-[#4F46E5]">
           Uploaded Questions
@@ -662,7 +687,8 @@ const QuestionUpload = () => {
           <p className="text-gray-500">
             No files uploaded yet for this course and question type.
           </p>
-        ) : (          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {uploadedFiles.map((file) => (
               <div
                 key={file.id}
@@ -691,7 +717,8 @@ const QuestionUpload = () => {
                   {/* Display chapter name and number if available */}
                   {file.chapter_name && (
                     <p className="text-xs font-medium text-indigo-800 bg-indigo-100 inline-block px-2 py-1 rounded mb-2">
-                      {file.chapter_name} {file.chapter && `(Chapter ${file.chapter})`}
+                      {file.chapter_name}{" "}
+                      {file.chapter && `(Chapter ${file.chapter})`}
                     </p>
                   )}
                   {!file.chapter_name && file.chapter && (
@@ -707,8 +734,10 @@ const QuestionUpload = () => {
                       setParsedTitle(file.title || "");
                       setParsedDescription(file.description || "");
                       setChapterName(file.chapter_name || "");
-                      setChapterNumber(file.chapter ? file.chapter.toString() : "");
-                      
+                      setChapterNumber(
+                        file.chapter ? file.chapter.toString() : ""
+                      );
+
                       // Fetch questions for this exam
                       fetchExamQuestions(file.id);
                     }}
@@ -716,7 +745,7 @@ const QuestionUpload = () => {
                   >
                     <Edit size={16} className="inline mr-1" /> Edit
                   </button>
-                  
+
                   <button
                     onClick={async () => {
                       setIsUpdating(true);
@@ -786,21 +815,23 @@ const QuestionUpload = () => {
           </div>
         )}
       </div>
-      
       {/* "Start without file" button */}
-      <div className="mt-4">
-        
-      </div>
-
+      <div className="mt-4"></div>
       {/* Chapter Name Modal */}
       {chapterModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl w-[90%] max-w-md text-center shadow-lg space-y-4 animate-fadeIn">
-            <h3 className="text-xl font-semibold text-[#4F46E5]">Enter Chapter Information</h3>
-            <p className="text-gray-600">Please provide information about this exam's chapter</p>
+            <h3 className="text-xl font-semibold text-[#4F46E5]">
+              Enter Chapter Information
+            </h3>
+            <p className="text-gray-600">
+              Please provide information about this exam's chapter
+            </p>
             <div className="space-y-3">
               <div className="flex flex-col text-left">
-                <label className="text-gray-700 text-sm font-medium mb-1">Chapter Name</label>
+                <label className="text-gray-700 text-sm font-medium mb-1">
+                  Chapter Name
+                </label>
                 <input
                   type="text"
                   placeholder="e.g. Introduction to Variables"
@@ -809,28 +840,34 @@ const QuestionUpload = () => {
                   className="border border-gray-300 rounded-md p-2 text-black"
                 />
               </div>
-              
+
               {existingChapters.length > 0 && (
                 <div className="text-left">
-                  <label className="text-gray-700 text-sm font-medium mb-1">Existing Chapters</label>
+                  <label className="text-gray-700 text-sm font-medium mb-1">
+                    Existing Chapters
+                  </label>
                   <div className="flex flex-wrap gap-2 mt-1 mb-3">
                     {existingChapters.map((chapter, idx) => (
-                      <span 
+                      <span
                         key={idx}
                         className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full cursor-pointer hover:bg-blue-200"
                         onClick={() => {
                           setChapterName(chapter.name);
-                          if(chapter.number) setChapterNumber(chapter.number.toString());
+                          if (chapter.number)
+                            setChapterNumber(chapter.number.toString());
                         }}
                       >
-                        {chapter.name} {chapter.number && `(Ch. ${chapter.number})`}
+                        {chapter.name}{" "}
+                        {chapter.number && `(Ch. ${chapter.number})`}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
-                <div className="flex flex-col text-left mt-3">
-                <label className="text-gray-700 text-sm font-medium mb-1">Chapter Number (optional)</label>
+              <div className="flex flex-col text-left mt-3">
+                <label className="text-gray-700 text-sm font-medium mb-1">
+                  Chapter Number (optional)
+                </label>
                 <select
                   value={chapterNumber}
                   onChange={(e) => setChapterNumber(e.target.value)}
@@ -838,11 +875,13 @@ const QuestionUpload = () => {
                 >
                   <option value="">Select chapter number</option>
                   {Array.from({ length: 20 }, (_, i) => i + 1).map((num) => (
-                    <option key={num} value={num}>{num}</option>
+                    <option key={num} value={num}>
+                      {num}
+                    </option>
                   ))}
                 </select>
               </div>
-              
+
               <div className="pt-4 flex justify-between">
                 <button
                   onClick={() => {
@@ -871,7 +910,6 @@ const QuestionUpload = () => {
           </div>
         </div>
       )}
-
       {/* Question Editor UI */}
       {showQuestionEditor && (
         <div className="fixed inset-0 bg-white z-50 overflow-auto p-6">
@@ -901,7 +939,6 @@ const QuestionUpload = () => {
                 </button>
               </div>
             </div>
-
             {/* Exam Title and Description */}
             <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -929,7 +966,6 @@ const QuestionUpload = () => {
                 />
               </div>
             </div>
-
             {/* Questions List */}
             <div className="mb-8">
               <h3 className="text-lg font-semibold text-[#4F46E5] mb-2">
@@ -938,13 +974,22 @@ const QuestionUpload = () => {
 
               {parsedQuestions.length === 0 ? (
                 <div className="p-4 bg-gray-100 rounded text-center">
-                  <p className="text-gray-500">No questions added yet. Add a new question below.</p>
+                  <p className="text-[#4F46E5]">
+                    No questions added yet. Add a new question below.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {parsedQuestions.map((q, index) => (                    <div key={index} className="p-4 border rounded-lg shadow hover:shadow-md">
+                  {parsedQuestions.map((q, index) => (
+                    <div
+                      key={index}
+                      className="p-4 border rounded-lg shadow hover:shadow-md"
+                    >
                       <div className="flex justify-between">
-                        <h4 className="font-medium text-gray-800">Q{index + 1}: {q.type.toUpperCase()}</h4>                        <div className="flex space-x-2">
+                        <h4 className="font-medium text-gray-800">
+                          Q{index + 1}: {q.type.toUpperCase()}
+                        </h4>{" "}
+                        <div className="flex space-x-2">
                           <button
                             onClick={() => editQuestion(index)}
                             className="text-blue-500 hover:text-blue-700 bg-blue-50 p-1 rounded"
@@ -962,39 +1007,48 @@ const QuestionUpload = () => {
                         </div>
                       </div>
                       <p className="mt-2 text-gray-700">{q.question}</p>
-                      
+
                       {q.type === "mcq" && (
                         <div className="mt-2 grid grid-cols-2 gap-2">
                           {Object.entries(q.options).map(([label, text]) => (
-                            <div key={label} className={`p-2 rounded ${label === q.answer ? 'bg-green-100' : 'bg-gray-50'}`}>
-                              <span className="font-medium">{label}:</span> {text}
+                            <div
+                              key={label}
+                              className={`p-2 text-black rounded ${
+                                label === q.answer
+                                  ? "bg-green-100"
+                                  : "bg-gray-50"
+                              }`}
+                            >
+                              <span className="font-medium text-black">{label}:</span>{" "}
+                              {text}
                             </div>
                           ))}
                         </div>
                       )}
-                      
+
                       {q.type !== "mcq" && (
-                        <div className="mt-2 bg-blue-50 p-2 rounded">
-                          <span className="font-medium">Answer:</span> {q.answer}
+                        <div className="mt-2 bg-blue-50 text-black p-2 rounded">
+                          <span className="font-medium text-black">Answer:</span>{" "}
+                          {q.answer}
                         </div>
                       )}
-                      
+
                       {q.type === "coding" && q.code && (
                         <div className="mt-2 bg-gray-100 p-2 rounded font-mono text-sm">
-                          <p className="font-medium">Starter Code:</p>
-                          <pre>{q.code}</pre>
+                          <p className="font-medium text-black">Starter Code:</p>
+                          <pre className="text-black">{q.code}</pre>
                         </div>
                       )}
-                      
+
                       {q.type === "code_error" && (
                         <>
                           <div className="mt-2 bg-red-50 p-2 rounded font-mono text-sm">
-                            <p className="font-medium">Buggy Code:</p>
-                            <pre>{q.buggy}</pre>
+                            <p className="font-medium text-black">Buggy Code:</p>
+                            <pre className="text-black">{q.buggy}</pre>
                           </div>
                           <div className="mt-2 bg-green-50 p-2 rounded font-mono text-sm">
-                            <p className="font-medium">Fix Code:</p>
-                            <pre>{q.fix}</pre>
+                            <p className="font-medium text-black">Fix Code:</p>
+                            <pre className="text-black">{q.fix}</pre>
                           </div>
                         </>
                       )}
@@ -1002,17 +1056,29 @@ const QuestionUpload = () => {
                   ))}
                 </div>
               )}
-            </div>            {/* Add New Question Form */}
-            <div id="questionFormSection" className={`p-6 rounded-lg border ${isEditing ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'}`}>              <h3 className="text-lg font-semibold text-[#4F46E5] mb-4">
-                {isEditing ? `Edit Question #${editingQuestionIndex + 1}` : "Add New Question"}
+            </div>{" "}
+            {/* Add New Question Form */}
+            <div
+              id="questionFormSection"
+              className={`p-6 rounded-lg border ${
+                isEditing ? "bg-blue-50 border-blue-200" : "bg-gray-50"
+              }`}
+            >
+              {" "}
+              <h3 className="text-lg font-semibold text-[#4F46E5] mb-4">
+                {isEditing
+                  ? `Edit Question #${editingQuestionIndex + 1}`
+                  : "Add New Question"}
               </h3>
-              
               {isEditing && (
                 <div className="mb-4 p-2 bg-blue-100 text-blue-800 rounded">
-                  <p className="text-sm">You are currently editing question #{editingQuestionIndex + 1}. Make your changes and click "Update Question" when done.</p>
+                  <p className="text-sm">
+                    You are currently editing question #
+                    {editingQuestionIndex + 1}. Make your changes and click
+                    "Update Question" when done.
+                  </p>
                 </div>
               )}
-              
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -1022,10 +1088,12 @@ const QuestionUpload = () => {
                     <select
                       className="border border-gray-300 rounded-md p-2 text-black w-full"
                       value={newQuestion.type}
-                      onChange={(e) => setNewQuestion({
-                        ...newQuestion,
-                        type: e.target.value
-                      })}
+                      onChange={(e) =>
+                        setNewQuestion({
+                          ...newQuestion,
+                          type: e.target.value,
+                        })
+                      }
                     >
                       <option value="mcq">Multiple Choice (MCQ)</option>
                       <option value="fill_blank">Fill in the Blanks</option>
@@ -1034,7 +1102,7 @@ const QuestionUpload = () => {
                       <option value="code_error">Code Error Detection</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-gray-700 text-sm font-medium mb-1">
                       Max Score
@@ -1043,15 +1111,17 @@ const QuestionUpload = () => {
                       type="number"
                       min="1"
                       value={newQuestion.max_score}
-                      onChange={(e) => setNewQuestion({
-                        ...newQuestion,
-                        max_score: parseInt(e.target.value) || 1
-                      })}
+                      onChange={(e) =>
+                        setNewQuestion({
+                          ...newQuestion,
+                          max_score: parseInt(e.target.value) || 1,
+                        })
+                      }
                       className="border border-gray-300 rounded-md p-2 text-black w-full"
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-gray-700 text-sm font-medium mb-1">
                     Question Text
@@ -1059,15 +1129,17 @@ const QuestionUpload = () => {
                   <textarea
                     rows="3"
                     value={newQuestion.question}
-                    onChange={(e) => setNewQuestion({
-                      ...newQuestion,
-                      question: e.target.value
-                    })}
+                    onChange={(e) =>
+                      setNewQuestion({
+                        ...newQuestion,
+                        question: e.target.value,
+                      })
+                    }
                     placeholder="Enter your question here..."
                     className="border border-gray-300 rounded-md p-2 text-black w-full"
                   />
                 </div>
-                
+
                 {newQuestion.type === "mcq" && (
                   <div>
                     <label className="block text-gray-700 text-sm font-medium mb-1">
@@ -1080,20 +1152,22 @@ const QuestionUpload = () => {
                           <input
                             type="text"
                             value={newQuestion.options[key]}
-                            onChange={(e) => setNewQuestion({
-                              ...newQuestion,
-                              options: {
-                                ...newQuestion.options,
-                                [key]: e.target.value
-                              }
-                            })}
+                            onChange={(e) =>
+                              setNewQuestion({
+                                ...newQuestion,
+                                options: {
+                                  ...newQuestion.options,
+                                  [key]: e.target.value,
+                                },
+                              })
+                            }
                             placeholder={`Option ${key}`}
                             className="border border-gray-300 rounded-md p-2 text-black w-full"
                           />
                         </div>
                       ))}
                     </div>
-                    
+
                     <div className="mt-2">
                       <label className="block text-gray-700 text-sm font-medium mb-1">
                         Correct Answer
@@ -1101,10 +1175,12 @@ const QuestionUpload = () => {
                       <select
                         className="border border-gray-300 rounded-md p-2 text-black w-full"
                         value={newQuestion.answer}
-                        onChange={(e) => setNewQuestion({
-                          ...newQuestion,
-                          answer: e.target.value
-                        })}
+                        onChange={(e) =>
+                          setNewQuestion({
+                            ...newQuestion,
+                            answer: e.target.value,
+                          })
+                        }
                       >
                         <option value="">Select correct answer</option>
                         {Object.keys(newQuestion.options).map((key) => (
@@ -1116,8 +1192,9 @@ const QuestionUpload = () => {
                     </div>
                   </div>
                 )}
-                
-                {(newQuestion.type === "fill_blank" || newQuestion.type === "short_answer") && (
+
+                {(newQuestion.type === "fill_blank" ||
+                  newQuestion.type === "short_answer") && (
                   <div>
                     <label className="block text-gray-700 text-sm font-medium mb-1">
                       Correct Answer
@@ -1125,16 +1202,18 @@ const QuestionUpload = () => {
                     <input
                       type="text"
                       value={newQuestion.answer}
-                      onChange={(e) => setNewQuestion({
-                        ...newQuestion,
-                        answer: e.target.value
-                      })}
+                      onChange={(e) =>
+                        setNewQuestion({
+                          ...newQuestion,
+                          answer: e.target.value,
+                        })
+                      }
                       placeholder="Enter the correct answer"
                       className="border border-gray-300 rounded-md p-2 text-black w-full"
                     />
                   </div>
                 )}
-                
+
                 {newQuestion.type === "coding" && (
                   <div>
                     <label className="block text-gray-700 text-sm font-medium mb-1">
@@ -1143,10 +1222,12 @@ const QuestionUpload = () => {
                     <textarea
                       rows="5"
                       value={newQuestion.code}
-                      onChange={(e) => setNewQuestion({
-                        ...newQuestion,
-                        code: e.target.value
-                      })}
+                      onChange={(e) =>
+                        setNewQuestion({
+                          ...newQuestion,
+                          code: e.target.value,
+                        })
+                      }
                       placeholder="Provide starter code for students"
                       className="border border-gray-300 rounded-md p-2 text-black w-full font-mono"
                     />
@@ -1156,16 +1237,18 @@ const QuestionUpload = () => {
                     <textarea
                       rows="3"
                       value={newQuestion.answer}
-                      onChange={(e) => setNewQuestion({
-                        ...newQuestion,
-                        answer: e.target.value
-                      })}
+                      onChange={(e) =>
+                        setNewQuestion({
+                          ...newQuestion,
+                          answer: e.target.value,
+                        })
+                      }
                       placeholder="Expected output or solution approach"
                       className="border border-gray-300 rounded-md p-2 text-black w-full"
                     />
                   </div>
                 )}
-                
+
                 {newQuestion.type === "code_error" && (
                   <div className="space-y-3">
                     <div>
@@ -1175,10 +1258,12 @@ const QuestionUpload = () => {
                       <textarea
                         rows="5"
                         value={newQuestion.buggy}
-                        onChange={(e) => setNewQuestion({
-                          ...newQuestion,
-                          buggy: e.target.value
-                        })}
+                        onChange={(e) =>
+                          setNewQuestion({
+                            ...newQuestion,
+                            buggy: e.target.value,
+                          })
+                        }
                         placeholder="Code with bugs for students to find"
                         className="border border-gray-300 rounded-md p-2 text-black w-full font-mono"
                       />
@@ -1190,10 +1275,12 @@ const QuestionUpload = () => {
                       <textarea
                         rows="5"
                         value={newQuestion.fix}
-                        onChange={(e) => setNewQuestion({
-                          ...newQuestion,
-                          fix: e.target.value
-                        })}
+                        onChange={(e) =>
+                          setNewQuestion({
+                            ...newQuestion,
+                            fix: e.target.value,
+                          })
+                        }
                         placeholder="The corrected version of the code"
                         className="border border-gray-300 rounded-md p-2 text-black w-full font-mono"
                       />
@@ -1205,24 +1292,27 @@ const QuestionUpload = () => {
                       <textarea
                         rows="2"
                         value={newQuestion.answer}
-                        onChange={(e) => setNewQuestion({
-                          ...newQuestion,
-                          answer: e.target.value
-                        })}
+                        onChange={(e) =>
+                          setNewQuestion({
+                            ...newQuestion,
+                            answer: e.target.value,
+                          })
+                        }
                         placeholder="Explanation of what was wrong and how to fix it"
                         className="border border-gray-300 rounded-md p-2 text-black w-full"
                       />
                     </div>
                   </div>
                 )}
-                  <div className="pt-2 flex gap-2">
+                <div className="pt-2 flex gap-2">
                   <button
                     onClick={addNewQuestion}
                     className="bg-[#4F46E5] text-white px-4 py-2 rounded hover:bg-[#4338ca] transition"
                   >
-                    <PlusCircle size={18} className="inline mr-2" /> {isEditing ? "Update Question" : "Add Question"}
+                    <PlusCircle size={18} className="inline mr-2" />{" "}
+                    {isEditing ? "Update Question" : "Add Question"}
                   </button>
-                  
+
                   {isEditing && (
                     <button
                       onClick={() => {
@@ -1250,7 +1340,6 @@ const QuestionUpload = () => {
           </div>
         </div>
       )}
-
       {/* Loading/Success Modal */}
       {vectorModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
