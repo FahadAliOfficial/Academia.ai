@@ -501,6 +501,9 @@ export default function ExamReview({ params }) {
         {/* Header section */}
         <div className="bg-gray-50 p-6 rounded-lg shadow-md mb-8 border border-gray-200">
           <h1 className="text-2xl font-bold text-[#4F46E5] mb-2">
+            Chapter {exam?.chapter} - {exam?.chapter_name}
+          </h1>
+          <h1 className="text-xl font-bold text-[#4F46E5] mb-2">
             {exam?.title}
           </h1>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

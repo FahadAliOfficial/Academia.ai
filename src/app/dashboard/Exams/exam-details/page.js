@@ -10,12 +10,13 @@ export default function ExamDashboard() {  const [examData, setExamData] = useSt
   const [courses, setCourses] = useState([]);
   const [courseId, setCourseId] = useState("");
   const [questionType, setQuestionType] = useState("EASY");
+  const [chapterNumber, setChapterNumber] = useState("");
+  const [existingChapters, setExistingChapters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [resultToDelete, setResultToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const router = useRouter();
-
   useEffect(() => {
     const fetchCourses = async () => {
       const { data, error } = await supabase
@@ -30,6 +31,42 @@ export default function ExamDashboard() {  const [examData, setExamData] = useSt
     };
     fetchCourses();
   }, []);
+  
+  // Fetch chapters when course changes
+  useEffect(() => {
+    const fetchChapters = async () => {
+      if (!courseId) {
+        setExistingChapters([]);
+        return;
+      }
+      
+      // Fetch existing chapters for this course
+      const { data: chaptersData, error: chaptersError } = await supabase
+        .from("exams")
+        .select("chapter_name, chapter")
+        .eq("course_id", courseId)
+        .not("chapter_name", "is", null);
+        
+      if (!chaptersError && chaptersData) {
+        // Create a unique list of chapters
+        const uniqueChapters = chaptersData.reduce((acc, item) => {
+          if (item.chapter_name && !acc.some(ch => ch.number === item.chapter)) {
+            acc.push({ 
+              name: item.chapter_name, 
+              number: item.chapter 
+            });
+          }
+          return acc;
+        }, []);
+        
+        // Sort chapters by number
+        uniqueChapters.sort((a, b) => (a.number || 0) - (b.number || 0));
+        setExistingChapters(uniqueChapters);
+      }
+    };
+    
+    fetchChapters();
+  }, [courseId]);
   // Handler for delete button click
   const handleDeleteResult = (resultId) => {
     setResultToDelete(resultId);
@@ -94,16 +131,24 @@ export default function ExamDashboard() {  const [examData, setExamData] = useSt
       setResultToDelete(null);
     }
   };
-
   useEffect(() => {
     const fetchFilteredExams = async () => {
       if (!courseId || !questionType) return;
       setLoading(true);
-      const { data: exams, error: examsError } = await supabase
+      
+      // Build query with filters
+      let query = supabase
         .from("exams")
-        .select("id, title, type")
+        .select("id, title, type, chapter, chapter_name")
         .eq("course_id", courseId)
         .eq("type", questionType.toLowerCase());
+      
+      // Add chapter filter if selected
+      if (chapterNumber && chapterNumber !== "") {
+        query = query.eq("chapter", parseInt(chapterNumber));
+      }
+      
+      const { data: exams, error: examsError } = await query;
 
       if (examsError) {
         console.error("Error fetching exams:", examsError);
@@ -143,14 +188,12 @@ export default function ExamDashboard() {  const [examData, setExamData] = useSt
             })),
           };
         })
-      );
-
-      setExamData(examsWithResults.filter(Boolean));
+      );      setExamData(examsWithResults.filter(Boolean));
       setLoading(false);
     };
 
     fetchFilteredExams();
-  }, [courseId, questionType]);
+  }, [courseId, questionType, chapterNumber]);
 
   if (loading) return <LoadingSpinner />;
   return (
@@ -168,14 +211,15 @@ export default function ExamDashboard() {  const [examData, setExamData] = useSt
 
         <h1 className="text-2xl font-bold text-[#4F46E5] mb-6">
           Exam Results Dashboard
-        </h1>
-
-        {/* Filter Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        </h1>        {/* Filter Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <select
             className="border border-gray-300 rounded-md p-2 text-black"
             value={courseId}
-            onChange={(e) => setCourseId(e.target.value)}
+            onChange={(e) => {
+              setCourseId(e.target.value);
+              setChapterNumber(""); // Reset chapter when course changes
+            }}
           >
             <option value="">Select Course</option>
             {courses.map((course) => (
@@ -196,18 +240,56 @@ export default function ExamDashboard() {  const [examData, setExamData] = useSt
               </option>
             ))}
           </select>
-        </div>
-
+          
+          <div className="relative">
+            <select
+              className="border border-gray-300 rounded-md p-2 text-black w-full pr-10"
+              value={chapterNumber}
+              onChange={(e) => setChapterNumber(e.target.value)}
+              disabled={!courseId || existingChapters.length === 0}
+            >
+              <option value="">All Chapters</option>
+              {existingChapters.map((chapter) => (
+                <option key={chapter.number} value={chapter.number}>
+                  {chapter.name} {chapter.number && `(Ch. ${chapter.number})`}
+                </option>
+              ))}
+            </select>
+            {chapterNumber && (
+              <button
+                onClick={() => setChapterNumber("")}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-red-500"
+                title="Clear chapter filter"
+              >
+                <span className="text-xl">×</span>
+              </button>
+            )}
+          </div>
+        </div>        {/* Active Filters Summary */}
+        {courseId && (
+          <div className="mb-4">
+            <p className="text-sm text-gray-600">
+              Showing results for: {courses.find(c => c.id === courseId)?.title || 'Selected course'} 
+              {questionType && ` / ${questionType}`}
+              {chapterNumber && ` / Chapter ${chapterNumber}`}
+            </p>
+          </div>
+        )}
+        
         {/* Results Section */}
         {examData.length > 0 ? (
           examData.map((exam) => (
             <div
               key={exam.id}
               className="bg-white shadow rounded-lg p-4 mb-6 border"
-            >
-              <h3 className="text-lg font-semibold text-[#4F46E5] mb-3">
+            >              <h3 className="text-lg font-semibold text-[#4F46E5] mb-1">
                 {exam.title} ({exam.type})
-              </h3>{" "}
+              </h3>
+              {exam.chapter_name && (
+                <p className="text-sm text-gray-600 mb-3">
+                  Chapter: {exam.chapter_name} {exam.chapter && `(Chapter ${exam.chapter})`}
+                </p>
+              )}
               <table className="min-w-full text-sm">
                 <thead className="border-b text-gray-600">
                   <tr>
@@ -223,7 +305,8 @@ export default function ExamDashboard() {  const [examData, setExamData] = useSt
                     <tr
                       key={res.id}
                       className="border-t hover:bg-gray-50 text-gray-800"
-                    >                      <td className="py-2">{res.studentName}</td>
+                    >
+                      <td className="py-2">{res.studentName}</td>
                       <td className="py-2">{res.obtained}</td>
                       <td className="py-2">{res.total_marks}</td>
                       <td className="py-2">
@@ -260,11 +343,25 @@ export default function ExamDashboard() {  const [examData, setExamData] = useSt
                 </tbody>
               </table>
             </div>
-          ))
-        ) : (
-          <p className="text-gray-500 text-center mt-10">
-            Select a course and question type to view exam results.
-          </p>        )}      </div>
+          ))        ) : (
+          <div className="text-gray-500 text-center mt-10">
+            {courseId && questionType ? (
+              <p>
+                No exam results found for the selected filters.
+                {chapterNumber && (
+                  <>
+                    <br/>
+                    <span className="text-sm mt-2 inline-block">
+                      Try selecting a different chapter or clearing the chapter filter.
+                    </span>
+                  </>
+                )}
+              </p>
+            ) : (
+              <p>Select a course and question type to view exam results.</p>
+            )}
+          </div>
+        )}</div>
       </div>
       
       {/* Delete Confirmation Modal */}
