@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math PDF Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .pdf-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        .pdf-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .pdf-title::before {
+            content: "📄";
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        .pdf-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .generate-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .generate-all {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 10px;
+        }
+        .generate-all button {
+            background: white;
+            color: #f5576c;
+            border: 2px solid #f5576c;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .generate-all button:hover {
+            background: #f5576c;
+            color: white;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Math PDF Generator</h1>
+        <p style="text-align: center; color: #666; font-size: 1.1em; margin-bottom: 30px;">
+            Generate comprehensive math PDFs for your vector database testing
+        </p>
+        
+        <div class="pdf-section">
+            <div class="pdf-title">Calculus Fundamentals</div>
+            <div class="pdf-description">
+                A comprehensive guide covering limits, derivatives, integrals, and applications. 
+                Perfect for testing mathematical content retrieval with detailed explanations, 
+                formulas, and step-by-step examples.
+            </div>
+            <button class="generate-btn" onclick="generateCalculusPDF()">Generate Calculus PDF</button>
+            <div class="status" id="calculus-status"></div>
+        </div>
+
+        <div class="pdf-section">
+            <div class="pdf-title">Linear Algebra Essentials</div>
+            <div class="pdf-description">
+                Essential concepts in linear algebra including vectors, matrices, eigenvalues, 
+                and transformations. Ideal for testing mathematical reasoning and problem-solving 
+                content in your vector database.
+            </div>
+            <button class="generate-btn" onclick="generateLinearAlgebraPDF()">Generate Linear Algebra PDF</button>
+            <div class="status" id="linear-status"></div>
+        </div>
+
+        <div class="generate-all">
+            <h3 style="color: white; margin-bottom: 15px;">🚀 Generate Both PDFs</h3>
+            <button onclick="generateBothPDFs()">Generate All Math PDFs</button>
+        </div>
+    </div>
+
+    <script>
+        function showStatus(elementId, message, isSuccess = true) {
+            const statusEl = document.getElementById(elementId);
+            statusEl.textContent = message;
+            statusEl.className = `status ${isSuccess ? 'success' : 'error'}`;
+            statusEl.style.display = 'block';
+            
+            if (isSuccess) {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function generateCalculusPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                // Title Page
+                doc.setFontSize(24);
+                doc.setFont(undefined, 'bold');
+                doc.text('CALCULUS FUNDAMENTALS', 105, 40, { align: 'center' });
+                
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'normal');
+                doc.text('A Comprehensive Guide to Differential and Integral Calculus', 105, 60, { align: 'center' });
+                
+                doc.setFontSize(12);
+                doc.text('Mathematics Course Material', 105, 80, { align: 'center' });
+
+                // Chapter 1: Limits
+                doc.addPage();
+                doc.setFontSize(18);
+                doc.setFont(undefined, 'bold');
+                doc.text('Chapter 1: Limits and Continuity', 20, 30);
+                
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'normal');
+                let yPos = 50;
+                
+                const limitsContent = [
+                    'Definition of a Limit:',
+                    'The limit of a function f(x) as x approaches a value c is the value that',
+                    'f(x) approaches as x gets arbitrarily close to c.',
+                    '',
+                    'Formal Definition:',
+                    'lim(x→c) f(x) = L if for every ε > 0, there exists δ > 0 such that',
+                    'if 0 < |x - c| < δ, then |f(x) - L| < ε',
+                    '',
+                    'Properties of Limits:',
+                    '1. lim(x→c) [f(x) + g(x)] = lim(x→c) f(x) + lim(x→c) g(x)',
+                    '2. lim(x→c) [f(x) * g(x)] = lim(x→c) f(x) * lim(x→c) g(x)',
+                    '3. lim(x→c) [f(x) / g(x)] = lim(x→c) f(x) / lim(x→c) g(x), if lim(x→c) g(x) ≠ 0',
+                    '',
+                    'Common Limits:',
+                    '• lim(x→0) (sin x)/x = 1',
+                    '• lim(x→∞) (1 + 1/x)^x = e',
+                    '• lim(x→0) (e^x - 1)/x = 1',
+                    '',
+                    'Continuity:',
+                    'A function f(x) is continuous at x = c if:',
+                    '1. f(c) exists',
+                    '2. lim(x→c) f(x) exists',
+                    '3. lim(x→c) f(x) = f(c)'
+                ];
+
+                limitsContent.forEach(line => {
+                    if (yPos > 270) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                    doc.text(line, 20, yPos);
+                    yPos += 8;
+                });
+
+                // Chapter 2: Derivatives
+                doc.addPage();
+                doc.setFontSize(18);
+                doc.setFont(undefined, 'bold');
+                doc.text('Chapter 2: Derivatives', 20, 30);
+                
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'normal');
+                yPos = 50;
+
+                const derivativesContent = [
+                    'Definition of a Derivative:',
+                    'The derivative of f(x) at x = c is defined as:',
+                    'f\'(c) = lim(h→0) [f(c+h) - f(c)]/h',
+                    '',
+                    'Geometric Interpretation:',
+                    'The derivative represents the slope of the tangent line to the curve',
+                    'y = f(x) at the point (c, f(c)).',
+                    '',
+                    'Basic Derivative Rules:',
+                    '1. Power Rule: d/dx(x^n) = nx^(n-1)',
+                    '2. Product Rule: d/dx[f(x)g(x)] = f\'(x)g(x) + f(x)g\'(x)',
+                    '3. Quotient Rule: d/dx[f(x)/g(x)] = [f\'(x)g(x) - f(x)g\'(x)]/[g(x)]²',
+                    '4. Chain Rule: d/dx[f(g(x))] = f\'(g(x)) · g\'(x)',
+                    '',
+                    'Common Derivatives:',
+                    '• d/dx(sin x) = cos x',
+                    '• d/dx(cos x) = -sin x',
+                    '• d/dx(e^x) = e^x',
+                    '• d/dx(ln x) = 1/x',
+                    '',
+                    'Applications of Derivatives:',
+                    '1. Finding critical points: Set f\'(x) = 0',
+                    '2. Optimization problems: Find maximum and minimum values',
+                    '3. Related rates: Solve problems involving rates of change',
+                    '4. Motion problems: Position, velocity, and acceleration',
+                    '',
+                    'Example Problem:',
+                    'Find the derivative of f(x) = x³ + 2x² - 5x + 1',
+                    'Solution: f\'(x) = 3x² + 4x - 5'
+                ];
+
+                derivativesContent.forEach(line => {
+                    if (yPos > 270) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                    doc.text(line, 20, yPos);
+                    yPos += 8;
+                });
+
+                // Chapter 3: Integrals
+                doc.addPage();
+                doc.setFontSize(18);
+                doc.setFont(undefined, 'bold');
+                doc.text('Chapter 3: Integration', 20, 30);
+                
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'normal');
+                yPos = 50;
+
+                const integralsContent = [
+                    'Definition of Definite Integral:',
+                    'The definite integral of f(x) from a to b is:',
+                    '∫[a to b] f(x) dx = lim(n→∞) Σ[i=1 to n] f(xi) Δx',
+                    '',
+                    'Fundamental Theorem of Calculus:',
+                    'Part 1: If F(x) = ∫[a to x] f(t) dt, then F\'(x) = f(x)',
+                    'Part 2: ∫[a to b] f(x) dx = F(b) - F(a), where F\'(x) = f(x)',
+                    '',
+                    'Basic Integration Rules:',
+                    '1. ∫ x^n dx = x^(n+1)/(n+1) + C, n ≠ -1',
+                    '2. ∫ e^x dx = e^x + C',
+                    '3. ∫ sin x dx = -cos x + C',
+                    '4. ∫ cos x dx = sin x + C',
+                    '5. ∫ 1/x dx = ln|x| + C',
+                    '',
+                    'Integration Techniques:',
+                    '1. Substitution Method (u-substitution)',
+                    '2. Integration by Parts: ∫ u dv = uv - ∫ v du',
+                    '3. Partial Fractions',
+                    '4. Trigonometric Substitution',
+                    '',
+                    'Applications of Integration:',
+                    '1. Area under curves',
+                    '2. Volume of solids of revolution',
+                    '3. Arc length of curves',
+                    '4. Work and energy problems',
+                    '',
+                    'Example Problem:',
+                    'Evaluate ∫[0 to π/2] sin x dx',
+                    'Solution: [-cos x] from 0 to π/2 = -cos(π/2) + cos(0) = 0 + 1 = 1'
+                ];
+
+                integralsContent.forEach(line => {
+                    if (yPos > 270) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                    doc.text(line, 20, yPos);
+                    yPos += 8;
+                });
+
+                doc.save('Calculus_Fundamentals.pdf');
+                showStatus('calculus-status', '✅ Calculus PDF generated successfully!');
+            } catch (error) {
+                showStatus('calculus-status', '❌ Error generating PDF: ' + error.message, false);
+            }
+        }
+
+        function generateLinearAlgebraPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                // Title Page
+                doc.setFontSize(24);
+                doc.setFont(undefined, 'bold');
+                doc.text('LINEAR ALGEBRA ESSENTIALS', 105, 40, { align: 'center' });
+                
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'normal');
+                doc.text('Vectors, Matrices, and Linear Transformations', 105, 60, { align: 'center' });
+                
+                doc.setFontSize(12);
+                doc.text('Advanced Mathematics Course Material', 105, 80, { align: 'center' });
+
+                // Chapter 1: Vectors
+                doc.addPage();
+                doc.setFontSize(18);
+                doc.setFont(undefined, 'bold');
+                doc.text('Chapter 1: Vectors and Vector Spaces', 20, 30);
+                
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'normal');
+                let yPos = 50;
+
+                const vectorsContent = [
+                    'Definition of a Vector:',
+                    'A vector is a quantity that has both magnitude and direction.',
+                    'In n-dimensional space, a vector v can be written as:',
+                    'v = (v₁, v₂, ..., vₙ) or v = [v₁, v₂, ..., vₙ]ᵀ',
+                    '',
+                    'Vector Operations:',
+                    '1. Addition: u + v = (u₁ + v₁, u₂ + v₂, ..., uₙ + vₙ)',
+                    '2. Scalar Multiplication: cv = (cv₁, cv₂, ..., cvₙ)',
+                    '3. Dot Product: u · v = u₁v₁ + u₂v₂ + ... + uₙvₙ',
+                    '4. Cross Product (3D): u × v = (u₂v₃ - u₃v₂, u₃v₁ - u₁v₃, u₁v₂ - u₂v₁)',
+                    '',
+                    'Vector Properties:',
+                    '• Magnitude: ||v|| = √(v₁² + v₂² + ... + vₙ²)',
+                    '• Unit Vector: û = v/||v||',
+                    '• Orthogonal Vectors: u · v = 0',
+                    '• Parallel Vectors: u = cv for some scalar c',
+                    '',
+                    'Vector Spaces:',
+                    'A vector space V is a set of vectors with operations that satisfy:',
+                    '1. Closure under addition and scalar multiplication',
+                    '2. Associativity and commutativity of addition',
+                    '3. Existence of zero vector and additive inverses',
+                    '4. Distributivity of scalar multiplication',
+                    '',
+                    'Linear Independence:',
+                    'Vectors v₁, v₂, ..., vₖ are linearly independent if',
+                    'c₁v₁ + c₂v₂ + ... + cₖvₖ = 0 implies c₁ = c₂ = ... = cₖ = 0',
+                    '',
+                    'Basis and Dimension:',
+                    'A basis for vector space V is a set of linearly independent',
+                    'vectors that span V. The dimension of V is the number of',
+                    'vectors in any basis for V.'
+                ];
+
+                vectorsContent.forEach(line => {
+                    if (yPos > 270) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                    doc.text(line, 20, yPos);
+                    yPos += 8;
+                });
+
+                // Chapter 2: Matrices
+                doc.addPage();
+                doc.setFontSize(18);
+                doc.setFont(undefined, 'bold');
+                doc.text('Chapter 2: Matrices and Matrix Operations', 20, 30);
+                
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'normal');
+                yPos = 50;
+
+                const matricesContent = [
+                    'Definition of a Matrix:',
+                    'An m×n matrix A is a rectangular array of numbers:',
+                    'A = [aᵢⱼ] where i = 1,2,...,m and j = 1,2,...,n',
+                    '',
+                    'Matrix Operations:',
+                    '1. Addition: (A + B)ᵢⱼ = aᵢⱼ + bᵢⱼ',
+                    '2. Scalar Multiplication: (cA)ᵢⱼ = c·aᵢⱼ',
+                    '3. Multiplication: (AB)ᵢⱼ = Σₖ aᵢₖbₖⱼ',
+                    '4. Transpose: (Aᵀ)ᵢⱼ = aⱼᵢ',
+                    '',
+                    'Special Matrices:',
+                    '• Identity Matrix: I = [δᵢⱼ] where δᵢⱼ = 1 if i=j, 0 otherwise',
+                    '• Zero Matrix: O = [0]',
+                    '• Diagonal Matrix: aᵢⱼ = 0 for i ≠ j',
+                    '• Symmetric Matrix: A = Aᵀ',
+                    '• Orthogonal Matrix: AAᵀ = I',
+                    '',
+                    'Matrix Inverse:',
+                    'For square matrix A, the inverse A⁻¹ satisfies:',
+                    'AA⁻¹ = A⁻¹A = I',
+                    'A is invertible if and only if det(A) ≠ 0',
+                    '',
+                    'Determinant:',
+                    'For 2×2 matrix: det(A) = a₁₁a₂₂ - a₁₂a₂₁',
+                    'For n×n matrix: det(A) = Σⱼ (-1)ⁱ⁺ʲ aᵢⱼ Mᵢⱼ',
+                    'where Mᵢⱼ is the (i,j)-minor of A',
+                    '',
+                    'Properties of Determinants:',
+                    '1. det(AB) = det(A)det(B)',
+                    '2. det(Aᵀ) = det(A)',
+                    '3. det(A⁻¹) = 1/det(A)',
+                    '4. If A has a row/column of zeros, det(A) = 0'
+                ];
+
+                matricesContent.forEach(line => {
+                    if (yPos > 270) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                    doc.text(line, 20, yPos);
+                    yPos += 8;
+                });
+
+                // Chapter 3: Eigenvalues and Eigenvectors
+                doc.addPage();
+                doc.setFontSize(18);
+                doc.setFont(undefined, 'bold');
+                doc.text('Chapter 3: Eigenvalues and Eigenvectors', 20, 30);
+                
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'normal');
+                yPos = 50;
+
+                const eigenContent = [
+                    'Definition:',
+                    'For square matrix A, a non-zero vector v is an eigenvector',
+                    'with eigenvalue λ if: Av = λv',
+                    '',
+                    'Characteristic Equation:',
+                    'det(A - λI) = 0',
+                    'The solutions λ are the eigenvalues of A',
+                    '',
+                    'Finding Eigenvectors:',
+                    'For each eigenvalue λ, solve (A - λI)v = 0',
+                    'The non-trivial solutions v are the eigenvectors',
+                    '',
+                    'Properties:',
+                    '1. The sum of eigenvalues equals the trace of A',
+                    '2. The product of eigenvalues equals the determinant of A',
+                    '3. Eigenvectors corresponding to distinct eigenvalues are',
+                    '   linearly independent',
+                    '',
+                    'Diagonalization:',
+                    'Matrix A is diagonalizable if A = PDP⁻¹',
+                    'where D is diagonal and P contains eigenvectors of A',
+                    '',
+                    'Applications:',
+                    '1. Solving systems of differential equations',
+                    '2. Principal Component Analysis (PCA)',
+                    '3. Google PageRank algorithm',
+                    '4. Quantum mechanics',
+                    '5. Stability analysis of dynamical systems',
+                    '',
+                    'Example Problem:',
+                    'Find eigenvalues of A = [3 1; 0 2]',
+                    'det(A - λI) = det([3-λ 1; 0 2-λ]) = (3-λ)(2-λ) = 0',
+                    'Eigenvalues: λ₁ = 3, λ₂ = 2'
+                ];
+
+                eigenContent.forEach(line => {
+                    if (yPos > 270) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                    doc.text(line, 20, yPos);
+                    yPos += 8;
+                });
+
+                doc.save('Linear_Algebra_Essentials.pdf');
+                showStatus('linear-status', '✅ Linear Algebra PDF generated successfully!');
+            } catch (error) {
+                showStatus('linear-status', '❌ Error generating PDF: ' + error.message, false);
+            }
+        }
+
+        function generateBothPDFs() {
+            generateCalculusPDF();
+            setTimeout(() => {
+                generateLinearAlgebraPDF();
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
