@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import useUserSession from "@/app/lib/useUserSession";
 import { supabase } from "@/app/lib/supabaseClient";
@@ -12,12 +12,23 @@ function DashboardContent() {
   const router = useRouter();
   const [role, setRole] = useState("");
   const [liveClassNotification, setLiveClassNotification] = useState(null);
-
-  useEffect(() => {
+  const [activeLiveClass, setActiveLiveClass] = useState(null);
+  const subscriptionRef = useRef(null);  useEffect(() => {
     if (user && user.user_metadata?.role) {
       setRole(user.user_metadata.role.toLowerCase());
     }
   }, [user, router]);
+
+  // Function to join live class directly
+  const handleJoinLiveClass = async () => {
+    if (!activeLiveClass) return;
+    
+    // Store live class data for the join page
+    localStorage.setItem("liveClassData", JSON.stringify(activeLiveClass));
+    
+    // Navigate to join page
+    router.push(`/dashboard/LiveClass/join/${activeLiveClass.meeting_link}`);
+  };
 
   const [userData, setUserData] = useState(null);
   const [userID, setUserID] = useState("");
@@ -133,6 +144,123 @@ function DashboardContent() {
 
   const [studentStats, setStudentStats] = useState([]);
   const [teacherStats, setTeacherStats] = useState([]);
+  // Real-time live class notifications
+  useEffect(() => {
+    if (!user || role !== "student") return;
+
+    const setupLiveClassNotifications = async () => {
+      // Get enrolled courses first
+      const { data: enrolledCourses } = await supabase
+        .from("enrollments")
+        .select("course_id")
+        .eq("user_id", user.id);
+
+      const courseIds = enrolledCourses?.map((e) => e.course_id) || [];
+      
+      if (courseIds.length === 0) return;
+
+      // Check for existing active live classes
+      const { data: existingLiveClasses } = await supabase
+        .from("live_classes")
+        .select("*")
+        .in("course_id", courseIds)
+        .eq("is_active", true);
+
+      if (existingLiveClasses && existingLiveClasses.length > 0) {
+        setActiveLiveClass(existingLiveClasses[0]);
+        playNotificationSound();
+      }
+
+      // Clean up existing subscription
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe();
+      }
+
+      console.log("🔄 Setting up real-time subscription for live classes");
+
+      // Set up real-time subscription for live_classes table
+      subscriptionRef.current = supabase
+        .channel("live-classes-notifications")
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "live_classes"
+          },
+          async (payload) => {
+            console.log("📺 New live class detected:", payload);
+            const newLiveClass = payload.new;
+            
+            // Check if this live class is for one of the student's enrolled courses
+            if (courseIds.includes(newLiveClass.course_id) && newLiveClass.is_active) {
+              console.log("🎓 Live class is for enrolled course, showing notification");
+              setActiveLiveClass(newLiveClass);
+              playNotificationSound();
+            }
+          }
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE", 
+            schema: "public",
+            table: "live_classes"
+          },
+          async (payload) => {
+            console.log("📺 Live class updated:", payload);
+            const updatedLiveClass = payload.new;
+            
+            // Check if this is for an enrolled course
+            if (courseIds.includes(updatedLiveClass.course_id)) {
+              if (updatedLiveClass.is_active) {
+                console.log("🎓 Live class went live, showing notification");
+                setActiveLiveClass(updatedLiveClass);
+                playNotificationSound();
+              } else {
+                console.log("🎓 Live class ended, removing notification");
+                setActiveLiveClass(null);
+                setLiveClassNotification(null);
+              }
+            }
+          }
+        )
+        .subscribe((status) => {
+          console.log(`🔌 Live class subscription status: ${status}`);
+        });
+    };
+
+    setupLiveClassNotifications();
+
+    // Cleanup subscription on unmount
+    return () => {
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe();
+      }
+    };
+  }, [user, role]);
+
+  // Audio notification function
+  const playNotificationSound = () => {
+    try {
+      // Create audio context and generate notification sound
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 1);
+    } catch (error) {
+      console.log("Audio notification not available:", error);
+    }
+  };
 
   //dashboard stats
   useEffect(() => {
@@ -146,16 +274,6 @@ function DashboardContent() {
           .eq("user_id", user.id);
 
         const courseIds = enrolledCourses?.map((e) => e.course_id) || [];
-
-        const { data: liveClasses } = await supabase
-          .from("live_classes")
-          .select("title, course_id")
-          .in("course_id", courseIds)
-          .eq("is_active", true);
-
-        if (liveClasses && liveClasses.length > 0) {
-          setLiveClassNotification(liveClasses[0].title);
-        }
         const { data: assignments } = await supabase
           .from("assignments")
           .select("id")
@@ -236,30 +354,80 @@ function DashboardContent() {
               </div>
             </div>
           </div>
-        </div>
-        {role === "student" && liveClassNotification && (
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl shadow-sm animate-pulse flex items-center">
-            <div className="bg-yellow-500 rounded-full p-2 mr-3">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-white"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                  clipRule="evenodd"
-                />
-              </svg>
+        </div>        {role === "student" && (liveClassNotification || activeLiveClass) && (
+          <div className="mb-6 p-6 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 text-red-800 rounded-xl shadow-lg animate-pulse">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="bg-red-500 rounded-full p-3 mr-4 animate-bounce">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-bold text-lg">🔴 Live Class in Progress!</p>
+                  <p className="text-red-700">{liveClassNotification || activeLiveClass?.title}</p>
+                  <p className="text-sm text-red-600 mt-1">
+                    Don't miss out - join now to participate in the live session
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button 
+                  onClick={handleJoinLiveClass}
+                  className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                    />
+                  </svg>
+                  Join Now
+                </button>
+                <button 
+                  onClick={() => {
+                    setLiveClassNotification(null);
+                    setActiveLiveClass(null);
+                  }}
+                  className="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-100 transition-colors"
+                  title="Dismiss notification"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
-            <div>
-              <p className="font-medium">Live Class in Progress!</p>
-              <p>{liveClassNotification}</p>
-            </div>{" "}
-            <button className="ml-auto bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg transition">
-              Join Now
-            </button>
           </div>
         )}{" "}
         {role === "student" && (
