@@ -264,4 +264,4 @@ Suggested improvements before or after launch:
 
 ## License
 
-Add your preferred license here (for example MIT, Apache-2.0, or proprietary/internal).
+MIT - Copyright (c) 2025 Fahad Ali
